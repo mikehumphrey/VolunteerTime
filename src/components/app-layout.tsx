@@ -1,6 +1,6 @@
 
 'use client';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -66,6 +66,15 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   const { setOpenMobile } = useSidebar();
   const { user, volunteer, logout, loading } = useAuth();
   
+  const publicPages = ['/login', '/signup'];
+  const isPublicPage = publicPages.includes(pathname);
+
+  useEffect(() => {
+    if (!loading && !user && !isPublicPage) {
+      router.push('/login');
+    }
+  }, [loading, user, isPublicPage, router]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -78,19 +87,16 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     )
   }
 
-  // If not loading and no user, and not on a public page, redirect to login
-  const publicPages = ['/login', '/signup'];
-  if (!user && !publicPages.includes(pathname)) {
-    router.push('/login');
-    return (
+  // While redirecting or on public pages, don't render the main layout
+  if (!user && !isPublicPage) {
+     return (
        <div className="flex items-center justify-center h-screen">
         <p>Redirecting to login...</p>
       </div>
     );
   }
-
-  // Don't render layout for public pages
-  if (publicPages.includes(pathname)) {
+  
+  if (isPublicPage) {
     return <>{children}</>;
   }
 

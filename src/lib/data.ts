@@ -31,7 +31,7 @@ export const volunteers: Omit<Volunteer, 'id'>[] = [
     avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704f',
     hours: 72,
     phone: '555-123-4567',
-    twitter: '@mike',
+    twitter: '@hewhokayaks',
     facebook: 'MichaelOHumphrey',
     instagram: 'alaskamike',
     formCompleted: true,
