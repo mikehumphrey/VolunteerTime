@@ -35,11 +35,13 @@ cd <your-repository-name>
 npm install
 ```
 
-### 3. Environment Variables
+### 3. Environment Variables & Security
 
-For security, API keys and other secrets are not stored in the main codebase. You must create a local environment file to run the application.
+**CRITICAL: NEVER COMMIT API KEYS OR SECRETS TO GITHUB.** This project uses a `.env.local` file to store your secret keys locally. The `.gitignore` file is configured to prevent this file from ever being tracked by Git.
 
-1.  **Create the file**: In the root of the project, find the file named `.env`. Make a copy of this file and rename the copy to `.env.local`.
+#### How to Set Up Your Local Keys
+
+1.  **Create the file**: In the root of your project, find the file named `.env`. Make a copy of this file and rename the copy to `.env.local`.
 
     ```bash
     cp .env .env.local
@@ -64,8 +66,8 @@ For security, API keys and other secrets are not stored in the main codebase. Yo
     ```
 
 3.  **Fill in the values**:
-    *   **`GEMINI_API_KEY`**: This is required for the AI features. You can get a key from [Google AI Studio](https://aistudio.google.com/app/apikey).
-    *   **Firebase Keys**: These are required to connect to your Firebase backend. You can find these in your **Firebase Console** under **Project Settings** > **General** > **Your apps**. Select your web app, and you'll see the configuration values. All Firebase keys meant for the browser **must** be prefixed with `NEXT_PUBLIC_`.
+    *   **`GEMINI_API_KEY`**: This is required for the AI features. Go to [Google AI Studio](https://aistudio.google.com/app/apikey), sign in, and click **"Create API key"** to generate a new key.
+    *   **Firebase Keys**: These are required to connect to your Firebase backend. You can find these in your **Firebase Console**. Go to **Project Settings** > **General** > **Your apps**. Select your web app, find the `firebaseConfig` object, and copy the corresponding values. All Firebase keys meant for the browser **must** be prefixed with `NEXT_PUBLIC_`.
 
 ### 4. Running the Development Server
 
