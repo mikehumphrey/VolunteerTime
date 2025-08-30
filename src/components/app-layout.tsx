@@ -12,6 +12,8 @@ import {
   Users,
   Settings,
   BookText,
+  Instagram,
+  Facebook,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -104,6 +106,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <span className="text-sm font-semibold">{currentUser.name}</span>
               <span className="text-xs text-muted-foreground">{currentUser.email}</span>
             </div>
+          </div>
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <a href="https://www.instagram.com/offthechainak/" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="icon" className="text-sidebar-foreground/70 hover:text-sidebar-foreground">
+                    <Instagram className="h-5 w-5" />
+                </Button>
+            </a>
+            <a href="https://www.facebook.com/offthechainak" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="icon" className="text-sidebar-foreground/70 hover:text-sidebar-foreground">
+                    <Facebook className="h-5 w-5" />
+                </Button>
+            </a>
           </div>
         </SidebarFooter>
       </Sidebar>
