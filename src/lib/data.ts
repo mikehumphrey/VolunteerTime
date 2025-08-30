@@ -11,6 +11,10 @@ export type Volunteer = {
   formCompleted?: boolean;
   formUrl?: string;
   isAdmin?: boolean;
+  privacySettings?: {
+    showPhone: boolean;
+    showSocial: boolean;
+  }
 };
 
 export const currentUser: Omit<Volunteer, 'id' | 'hours' | 'formCompleted' | 'formUrl'> = {
@@ -22,14 +26,18 @@ export const currentUser: Omit<Volunteer, 'id' | 'hours' | 'formCompleted' | 'fo
   facebook: 'frankie.adams',
   instagram: 'frankieadams',
   isAdmin: true,
+  privacySettings: {
+    showPhone: true,
+    showSocial: true,
+  }
 };
 
 export const volunteers: Volunteer[] = [
-  { id: 1, name: 'Alice Johnson', email: 'alice@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704a', hours: 42, phone: '555-0101', twitter: '@alicej', facebook: 'alice.johnson', formCompleted: true, formUrl: 'https://www.offthechainak.org/wordpress/sample-page/volunteer/volunteer-form/' },
-  { id: 2, name: 'Bob Williams', email: 'bob@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704b', hours: 28, phone: '555-0102', instagram: 'bobw', formCompleted: false },
-  { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704c', hours: 55, phone: '555-0103', facebook: 'charlie.brown', formCompleted: true, formUrl: 'https://www.offthechainak.org/wordpress/sample-page/volunteer/volunteer-form/' },
-  { id: 4, name: 'Diana Miller', email: 'diana@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d', hours: 19, phone: '555-0104', formCompleted: false },
-  { id: 5, name: 'Ethan Davis', email: 'ethan@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704e', hours: 34, phone: '555-0105', twitter: '@ethand', instagram: 'ethand', formCompleted: true, formUrl: 'https://www.offthechainak.org/wordpress/sample-page/volunteer/volunteer-form/' },
+  { id: 1, name: 'Alice Johnson', email: 'alice@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704a', hours: 42, phone: '555-0101', twitter: '@alicej', facebook: 'alice.johnson', formCompleted: true, formUrl: 'https://www.offthechainak.org/wordpress/sample-page/volunteer/volunteer-form/', privacySettings: { showPhone: true, showSocial: true } },
+  { id: 2, name: 'Bob Williams', email: 'bob@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704b', hours: 28, phone: '555-0102', instagram: 'bobw', formCompleted: false, privacySettings: { showPhone: false, showSocial: true } },
+  { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704c', hours: 55, phone: '555-0103', facebook: 'charlie.brown', formCompleted: true, formUrl: 'https://www.offthechainak.org/wordpress/sample-page/volunteer/volunteer-form/', privacySettings: { showPhone: true, showSocial: false } },
+  { id: 4, name: 'Diana Miller', email: 'diana@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d', hours: 19, phone: '555-0104', formCompleted: false, privacySettings: { showPhone: true, showSocial: true } },
+  { id: 5, name: 'Ethan Davis', email: 'ethan@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704e', hours: 34, phone: '555-0105', twitter: '@ethand', instagram: 'ethand', formCompleted: true, formUrl: 'https://www.offthechainak.org/wordpress/sample-page/volunteer/volunteer-form/', privacySettings: { showPhone: true, showSocial: true } },
   { ...currentUser, id: 6, hours: 72, formCompleted: true, formUrl: 'https://www.offthechainak.org/wordpress/sample-page/volunteer/volunteer-form/' },
 ];
 

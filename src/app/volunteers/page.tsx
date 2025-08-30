@@ -129,6 +129,7 @@ export default function VolunteersPage() {
         ...data,
         id: Math.max(...volunteers.map(v => v.id), 0) + 1,
         avatar: `https://i.pravatar.cc/150?u=${Math.random()}`,
+        privacySettings: { showPhone: true, showSocial: true },
       };
       setVolunteers([...volunteers, newVolunteer]);
       toast({
@@ -396,12 +397,12 @@ export default function VolunteersPage() {
                   </TableCell>
                   <TableCell>
                      <div className="flex flex-col gap-1">
-                        {volunteer.phone && <div className="flex items-center gap-2 text-sm"><Phone className="w-3 h-3 text-muted-foreground" /> <span>{volunteer.phone}</span></div>}
-                        <div className="flex items-center gap-2 text-sm">
+                        {volunteer.phone && (volunteer.privacySettings?.showPhone ?? true) && <div className="flex items-center gap-2 text-sm"><Phone className="w-3 h-3 text-muted-foreground" /> <span>{volunteer.phone}</span></div>}
+                        {(volunteer.privacySettings?.showSocial ?? true) && <div className="flex items-center gap-2 text-sm">
                            {volunteer.twitter && <a href={`https://twitter.com/${volunteer.twitter.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Twitter</a>}
                            {volunteer.facebook && <a href={`https://facebook.com/${volunteer.facebook}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Facebook</a>}
                            {volunteer.instagram && <a href={`https://instagram.com/${volunteer.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Instagram</a>}
-                        </div>
+                        </div>}
                      </div>
                   </TableCell>
                   <TableCell>
