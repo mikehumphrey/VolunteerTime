@@ -25,8 +25,8 @@ const profileFormSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
   phone: z.string().optional(),
   twitter: z.string().optional(),
-  linkedin: z.string().optional(),
-  github: z.string().optional(),
+  facebook: z.string().optional(),
+  instagram: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -41,8 +41,8 @@ export default function ProfilePage() {
       email: currentUser.email,
       phone: currentUser.phone,
       twitter: currentUser.twitter,
-      linkedin: currentUser.linkedin,
-      github: currentUser.github,
+      facebook: currentUser.facebook,
+      instagram: currentUser.instagram,
     },
     mode: "onChange",
   });
@@ -145,12 +145,12 @@ export default function ProfilePage() {
                     />
                      <FormField
                         control={form.control}
-                        name="linkedin"
+                        name="facebook"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>LinkedIn</FormLabel>
+                            <FormLabel>Facebook</FormLabel>
                             <FormControl>
-                            <Input placeholder="in/username" {...field} />
+                            <Input placeholder="username" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -158,12 +158,12 @@ export default function ProfilePage() {
                     />
                      <FormField
                         control={form.control}
-                        name="github"
+                        name="instagram"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>GitHub</FormLabel>
+                            <FormLabel>Instagram</FormLabel>
                             <FormControl>
-                            <Input placeholder="username" {...field} />
+                            <Input placeholder="@username" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>

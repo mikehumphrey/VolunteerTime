@@ -57,8 +57,8 @@ const volunteerFormSchema = z.object({
   hours: z.coerce.number().min(0, "Hours cannot be negative."),
   phone: z.string().optional(),
   twitter: z.string().optional(),
-  linkedin: z.string().optional(),
-  github: z.string().optional(),
+  facebook: z.string().optional(),
+  instagram: z.string().optional(),
 });
 
 type VolunteerFormValues = z.infer<typeof volunteerFormSchema>;
@@ -77,14 +77,14 @@ export default function VolunteersPage() {
       hours: 0,
       phone: "",
       twitter: "",
-      linkedin: "",
-      github: "",
+      facebook: "",
+      instagram: "",
     },
   });
 
   const handleAddClick = () => {
     setEditingVolunteer(null);
-    form.reset({ name: "", email: "", hours: 0, phone: "", twitter: "", linkedin: "", github: "" });
+    form.reset({ name: "", email: "", hours: 0, phone: "", twitter: "", facebook: "", instagram: "" });
     setIsFormOpen(true);
   };
 
@@ -226,12 +226,12 @@ export default function VolunteersPage() {
                 />
                  <FormField
                   control={form.control}
-                  name="linkedin"
+                  name="facebook"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>LinkedIn Profile</FormLabel>
+                      <FormLabel>Facebook Profile</FormLabel>
                       <FormControl>
-                        <Input placeholder="in/username" {...field} />
+                        <Input placeholder="username" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -239,12 +239,12 @@ export default function VolunteersPage() {
                 />
                  <FormField
                   control={form.control}
-                  name="github"
+                  name="instagram"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>GitHub Profile</FormLabel>
+                      <FormLabel>Instagram Profile</FormLabel>
                       <FormControl>
-                        <Input placeholder="username" {...field} />
+                        <Input placeholder="@username" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -307,8 +307,8 @@ export default function VolunteersPage() {
                         {volunteer.phone && <div className="flex items-center gap-2 text-sm"><Phone className="w-3 h-3 text-muted-foreground" /> <span>{volunteer.phone}</span></div>}
                         <div className="flex items-center gap-2 text-sm">
                            {volunteer.twitter && <a href={`https://twitter.com/${volunteer.twitter.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Twitter</a>}
-                           {volunteer.linkedin && <a href={`https://linkedin.com/${volunteer.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">LinkedIn</a>}
-                           {volunteer.github && <a href={`https://github.com/${volunteer.github}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">GitHub</a>}
+                           {volunteer.facebook && <a href={`https://facebook.com/${volunteer.facebook}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Facebook</a>}
+                           {volunteer.instagram && <a href={`https://instagram.com/${volunteer.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Instagram</a>}
                         </div>
                      </div>
                   </TableCell>
