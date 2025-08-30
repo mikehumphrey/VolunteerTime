@@ -28,6 +28,7 @@ import {
   SidebarInset,
   SidebarTrigger,
   SidebarFooter,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { currentUser } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -64,11 +65,12 @@ const OffTheChainLogo = () => (
     </svg>
   );
 
-export function AppLayout({ children }: { children: ReactNode }) {
+function AppLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-
+  const { setOpenMobile } = useSidebar();
+  
   return (
-    <SidebarProvider>
+    <>
       <Sidebar>
         <SidebarHeader className="p-4">
           <div className="flex items-center gap-2">
@@ -85,7 +87,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
+              <SidebarMenuItem key={item.href} onClick={() => setOpenMobile(false)}>
                 <Link href={item.href} target={item.external ? "_blank" : undefined} rel={item.external ? "noopener noreferrer" : undefined}>
                   <SidebarMenuButton
                     isActive={pathname === item.href && !item.external}
@@ -131,6 +133,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-8">{children}</main>
       </SidebarInset>
+    </>
+  );
+}
+
+
+export function AppLayout({ children }: { children: ReactNode }) {
+  return (
+    <SidebarProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
     </SidebarProvider>
   );
 }
