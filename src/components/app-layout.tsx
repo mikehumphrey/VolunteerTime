@@ -1,3 +1,4 @@
+
 'use client';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
@@ -14,6 +15,7 @@ import {
   BookText,
   Instagram,
   Facebook,
+  Calendar,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -33,6 +35,7 @@ import { Button } from './ui/button';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/calendar', icon: Calendar, label: 'Calendar' },
   { href: '/volunteers', icon: Users, label: 'Volunteers' },
   { href: '/reports', icon: FileDown, label: 'Reports' },
   { href: '/summary', icon: BrainCircuit, label: 'AI Summary' },
