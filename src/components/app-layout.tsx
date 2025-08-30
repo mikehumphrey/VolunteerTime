@@ -9,6 +9,7 @@ import {
   User,
   Store,
   List,
+  Users,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -28,6 +29,7 @@ import { Button } from './ui/button';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/volunteers', icon: Users, label: 'Volunteers' },
   { href: '/reports', icon: FileDown, label: 'Reports' },
   { href: '/summary', icon: BrainCircuit, label: 'AI Summary' },
   { href: '/store', icon: Store, label: 'Store' },
