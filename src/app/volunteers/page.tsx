@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { MoreHorizontal, UserPlus, Edit, Trash2, Phone, FileText, CheckCircle, XCircle } from "lucide-react";
+import { MoreHorizontal, UserPlus, Edit, Trash2, Phone, FileText, CheckCircle, XCircle, Shield } from "lucide-react";
 import { volunteers as initialVolunteers, Volunteer, appSettings } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useForm } from "react-hook-form";
@@ -52,6 +52,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 const volunteerFormSchema = z.object({
   id: z.number().optional(),
@@ -64,6 +65,7 @@ const volunteerFormSchema = z.object({
   instagram: z.string().optional(),
   formCompleted: z.boolean().default(false),
   formUrl: z.string().url("Please enter a valid URL.").optional().or(z.literal('')),
+  isAdmin: z.boolean().default(false),
 });
 
 type VolunteerFormValues = z.infer<typeof volunteerFormSchema>;
@@ -86,12 +88,13 @@ export default function VolunteersPage() {
       instagram: "",
       formCompleted: false,
       formUrl: "",
+      isAdmin: false,
     },
   });
 
   const handleAddClick = () => {
     setEditingVolunteer(null);
-    form.reset({ name: "", email: "", hours: 0, phone: "", twitter: "", facebook: "", instagram: "", formCompleted: false, formUrl: "" });
+    form.reset({ name: "", email: "", hours: 0, phone: "", twitter: "", facebook: "", instagram: "", formCompleted: false, formUrl: "", isAdmin: false });
     setIsFormOpen(true);
   };
 
@@ -257,6 +260,26 @@ export default function VolunteersPage() {
                     </FormItem>
                   )}
                 />
+                 <FormField
+                  control={form.control}
+                  name="isAdmin"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <FormLabel>Administrator</FormLabel>
+                        <FormDescription>
+                          Grants admin privileges to this user.
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Volunteer Form</CardTitle>
@@ -356,7 +379,15 @@ export default function VolunteersPage() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium">{volunteer.name}</div>
+                        <div className="font-medium flex items-center gap-2">
+                          {volunteer.name}
+                          {volunteer.isAdmin && (
+                            <Badge variant="secondary" className="gap-1">
+                              <Shield className="h-3 w-3"/>
+                              Admin
+                            </Badge>
+                          )}
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           {volunteer.email}
                         </div>

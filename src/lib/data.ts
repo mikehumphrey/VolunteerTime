@@ -10,6 +10,7 @@ export type Volunteer = {
   instagram?: string;
   formCompleted?: boolean;
   formUrl?: string;
+  isAdmin?: boolean;
 };
 
 export const currentUser: Omit<Volunteer, 'id' | 'hours' | 'formCompleted' | 'formUrl'> = {
@@ -20,6 +21,7 @@ export const currentUser: Omit<Volunteer, 'id' | 'hours' | 'formCompleted' | 'fo
   twitter: '@frankie',
   facebook: 'frankie.adams',
   instagram: 'frankieadams',
+  isAdmin: true,
 };
 
 export const volunteers: Volunteer[] = [
