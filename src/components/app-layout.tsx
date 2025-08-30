@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   User,
   Handshake,
+  Store,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -29,6 +30,7 @@ const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/reports', icon: FileDown, label: 'Reports' },
   { href: '/summary', icon: BrainCircuit, label: 'AI Summary' },
+  { href: '/store', icon: Store, label: 'Store' },
   { href: '/profile', icon: User, label: 'Profile' },
 ];
 

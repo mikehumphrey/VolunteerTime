@@ -20,3 +20,26 @@ export const currentUser = {
   phone: '555-123-4567',
   avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704f',
 };
+
+export type StoreItem = {
+  id: string;
+  name: string;
+  cost: number; // in hours
+};
+
+export const storeItems: StoreItem[] = [
+  { id: 'tshirt', name: 'Branded T-Shirt', cost: 5 },
+  { id: 'mug', name: 'Coffee Mug', cost: 3 },
+  { id: 'tote', name: 'Tote Bag', cost: 4 },
+  { id: 'cap', name: 'Baseball Cap', cost: 4 },
+];
+
+export type Transaction = {
+  id: string;
+  volunteerId: number;
+  itemId: string;
+  hoursDeducted: number;
+  date: Date;
+};
+
+export const transactions: Transaction[] = [];
