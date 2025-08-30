@@ -11,6 +11,7 @@ import {
   List,
   Users,
   Settings,
+  BookText,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -37,6 +38,7 @@ const navItems = [
   { href: '/transactions', icon: List, label: 'Transactions' },
   { href: '/profile', icon: User, label: 'Profile' },
   { href: '/settings', icon: Settings, label: 'Settings' },
+  { href: 'https://www.offthechainak.org/wordpress/sample-page/hours/#:~:text=info%20see%20the-,Volunteer%20Handbook,-Proudly%20powered%20by', icon: BookText, label: 'Handbook', external: true },
 ];
 
 const OffTheChainLogo = () => (
@@ -79,9 +81,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <SidebarMenu>
             {navItems.map((item) => (
               <SidebarMenuItem key={item.href}>
-                <Link href={item.href}>
+                <Link href={item.href} target={item.external ? "_blank" : undefined} rel={item.external ? "noopener noreferrer" : undefined}>
                   <SidebarMenuButton
-                    isActive={pathname === item.href}
+                    isActive={pathname === item.href && !item.external}
                     tooltip={item.label}
                   >
                     <item.icon />
