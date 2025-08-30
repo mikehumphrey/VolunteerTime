@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { volunteers } from '@/lib/data';
 import { Switch } from "@/components/ui/switch";
 
-const currentUser = volunteers.find(v => v.email === 'frankie@example.com')!;
+const currentUser = volunteers.find(v => v.email === 'michaelhumph@gmail.com')!;
 
 const profileFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50, "Name must not be longer than 50 characters."),

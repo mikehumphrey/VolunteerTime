@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -23,7 +24,7 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState('');
   const { toast } = useToast();
-  const currentUser = volunteers.find(v => v.email === 'frankie@example.com')!;
+  const currentUser = volunteers.find(v => v.email === 'michaelhumph@gmail.com')!;
 
 
   const handleGenerateSummary = async () => {

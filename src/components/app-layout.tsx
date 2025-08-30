@@ -61,7 +61,7 @@ const OffTheChainLogo = () => (
 function AppLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
-  const currentUser = volunteers.find(v => v.email === 'frankie@example.com');
+  const currentUser = volunteers.find(v => v.email === 'michaelhumph@gmail.com');
   
   return (
     <>
