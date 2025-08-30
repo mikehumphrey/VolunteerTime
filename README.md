@@ -37,32 +37,35 @@ npm install
 
 ### 3. Environment Variables
 
-Create a file named `.env.local` in the root of your project by copying the `.env` template. This file is for your local development and **will not be committed to version control**.
+For security, API keys and other secrets are not stored in the main codebase. You must create a local environment file to run the application.
 
-```bash
-cp .env .env.local
-```
+1.  **Create the file**: In the root of the project, find the file named `.env`. Make a copy of this file and rename the copy to `.env.local`.
 
-Now, open `.env.local` and fill in your project's specific keys:
+    ```bash
+    cp .env .env.local
+    ```
 
-```
-# .env.local
+2.  **Edit the file**: Open your new `.env.local` file in a text editor. You will see the following content:
 
-# Get this from the Google AI Studio
-GEMINI_API_KEY="your_google_ai_studio_api_key"
+    ```
+    # .env.local
 
-# Get these from your Firebase project settings
-# (Firebase Console > Project Settings > General > Your apps > SDK setup and configuration)
-NEXT_PUBLIC_FIREBASE_API_KEY="your_firebase_api_key"
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your_firebase_auth_domain"
-NEXT_PUBLIC_FIREBASE_PROJECT_ID="your_firebase_project_id"
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your_firebase_storage_bucket"
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="your_firebase_messaging_sender_id"
-NEXT_PUBLIC_FIREBASE_APP_ID="your_firebase_app_id"
-```
+    # Get this from the Google AI Studio
+    GEMINI_API_KEY="your_google_ai_studio_api_key"
 
-- **`GEMINI_API_KEY`**: This is required for the AI features to work. You can obtain a key from [Google AI Studio](https://aistudio.google.com/app/apikey).
-- **Firebase Keys**: These are required to connect your application to your Firebase backend. You can find these values in your Firebase project settings. All Firebase keys intended for the browser **must** be prefixed with `NEXT_PUBLIC_`.
+    # Get these from your Firebase project settings
+    # (Firebase Console > Project Settings > General > Your apps > SDK setup and configuration)
+    NEXT_PUBLIC_FIREBASE_API_KEY="your_firebase_api_key"
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your_firebase_auth_domain"
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID="your_firebase_project_id"
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your_firebase_storage_bucket"
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="your_firebase_messaging_sender_id"
+    NEXT_PUBLIC_FIREBASE_APP_ID="your_firebase_app_id"
+    ```
+
+3.  **Fill in the values**:
+    *   **`GEMINI_API_KEY`**: This is required for the AI features. You can get a key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+    *   **Firebase Keys**: These are required to connect to your Firebase backend. You can find these in your **Firebase Console** under **Project Settings** > **General** > **Your apps**. Select your web app, and you'll see the configuration values. All Firebase keys meant for the browser **must** be prefixed with `NEXT_PUBLIC_`.
 
 ### 4. Running the Development Server
 
