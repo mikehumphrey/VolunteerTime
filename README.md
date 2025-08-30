@@ -65,6 +65,15 @@ This will start the Next.js development server, typically on `http://localhost:9
 This application is configured to use Firebase. The configuration is located in `src/lib/firebase.ts`.
 
 - **Firestore Database**: The application uses Firestore to store all data. Make sure your Firebase project has Firestore enabled.
+
+- **Authentication Providers**: You must enable the sign-in providers you want to use.
+  1. Go to the [Firebase Console](https://console.firebase.google.com) and select your project.
+  2. Navigate to **Build > Authentication**.
+  3. Select the **Sign-in method** tab.
+  4. Enable **Email/Password**.
+  5. Enable **Google**, provide a project support email, and click Save.
+
+
 - **Security Rules**: **This is a critical step.** You must configure Firestore Security Rules to secure your data. Go to your Firebase project -> Firestore Database -> Rules and paste the following:
 
 ```
