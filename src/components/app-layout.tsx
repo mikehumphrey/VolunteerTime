@@ -2,7 +2,7 @@
 'use client';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
   BrainCircuit,
@@ -17,6 +17,7 @@ import {
   Instagram,
   Facebook,
   Calendar,
+  LogOut
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -31,9 +32,10 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { volunteers } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
+import { useAuth } from '@/hooks/use-auth';
+import { Skeleton } from './ui/skeleton';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -60,9 +62,39 @@ const OffTheChainLogo = () => (
 
 function AppLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { setOpenMobile } = useSidebar();
-  const currentUser = volunteers.find(v => v.email === 'michaelhumph@gmail.com');
+  const { user, volunteer, logout, loading } = useAuth();
   
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <OffTheChainLogo />
+          <p className="text-muted-foreground">Loading application...</p>
+          <Skeleton className="h-4 w-48" />
+        </div>
+      </div>
+    )
+  }
+
+  // If not loading and no user, and not on a public page, redirect to login
+  const publicPages = ['/login', '/signup'];
+  if (!user && !publicPages.includes(pathname)) {
+    router.push('/login');
+    return (
+       <div className="flex items-center justify-center h-screen">
+        <p>Redirecting to login...</p>
+      </div>
+    );
+  }
+
+  // Don't render layout for public pages
+  if (publicPages.includes(pathname)) {
+    return <>{children}</>;
+  }
+
+
   return (
     <>
       <Sidebar>
@@ -93,17 +125,20 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
             ))}
           </SidebarMenu>
         </SidebarContent>
-        {currentUser && (
+        {volunteer && (
             <SidebarFooter className="p-4">
             <div className="flex items-center gap-3">
                 <Avatar>
-                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+                <AvatarImage src={volunteer.avatar} alt={volunteer.name} />
+                <AvatarFallback>{volunteer.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                <span className="text-sm font-semibold">{currentUser.name}</span>
-                <span className="text-xs text-muted-foreground">{currentUser.email}</span>
+                <span className="text-sm font-semibold">{volunteer.name}</span>
+                <span className="text-xs text-muted-foreground">{volunteer.email}</span>
                 </div>
+                <Button variant="ghost" size="icon" className="ml-auto" onClick={logout}>
+                    <LogOut className="h-5 w-5" />
+                </Button>
             </div>
             <div className="flex items-center justify-center gap-2 mt-4">
                 <a href="https://www.instagram.com/offthechainak/" target="_blank" rel="noopener noreferrer">

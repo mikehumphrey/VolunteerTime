@@ -19,10 +19,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { volunteers } from '@/lib/data';
 import { Switch } from "@/components/ui/switch";
-
-const currentUser = volunteers.find(v => v.email === 'michaelhumph@gmail.com')!;
+import { useAuth } from "@/hooks/use-auth";
+import { Skeleton } from "@/components/ui/skeleton";
+import { updateVolunteer } from "@/lib/firestore";
+import { useEffect } from "react";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50, "Name must not be longer than 50 characters."),
@@ -41,30 +42,91 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function ProfilePage() {
   const { toast } = useToast();
+  const { volunteer, loading } = useAuth();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: currentUser.name,
-      email: currentUser.email,
-      phone: currentUser.phone,
-      twitter: currentUser.twitter,
-      facebook: currentUser.facebook,
-      instagram: currentUser.instagram,
+      name: '',
+      email: '',
+      phone: '',
+      twitter: '',
+      facebook: '',
+      instagram: '',
       privacySettings: {
-        showPhone: currentUser.privacySettings?.showPhone ?? true,
-        showSocial: currentUser.privacySettings?.showSocial ?? true,
+        showPhone: true,
+        showSocial: true,
       }
     },
     mode: "onChange",
   });
+  
+  useEffect(() => {
+    if (volunteer) {
+        form.reset({
+            name: volunteer.name,
+            email: volunteer.email,
+            phone: volunteer.phone || '',
+            twitter: volunteer.twitter || '',
+            facebook: volunteer.facebook || '',
+            instagram: volunteer.instagram || '',
+            privacySettings: {
+              showPhone: volunteer.privacySettings?.showPhone ?? true,
+              showSocial: volunteer.privacySettings?.showSocial ?? true,
+            }
+        })
+    }
+  }, [volunteer, form]);
 
-  function onSubmit(data: ProfileFormValues) {
-    toast({
-      title: "Profile Updated",
-      description: "Your profile information has been saved successfully.",
-    });
-    console.log(data);
+  async function onSubmit(data: ProfileFormValues) {
+    if (!volunteer) return;
+    
+    try {
+        await updateVolunteer(volunteer.id, data);
+        toast({
+            title: "Profile Updated",
+            description: "Your profile information has been saved successfully.",
+        });
+    } catch (error) {
+        toast({
+            title: "Update Failed",
+            description: "Could not update your profile. Please try again.",
+            variant: "destructive"
+        });
+    }
+  }
+
+  if (loading || !volunteer) {
+    return (
+       <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-40 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent>
+                <div className="flex items-center gap-6 mb-8">
+                  <Skeleton className="h-20 w-20 rounded-full" />
+                  <Skeleton className="h-10 w-32" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -83,8 +145,8 @@ export default function ProfilePage() {
             <CardContent>
                 <div className="flex items-center gap-6 mb-8">
                   <Avatar className="h-20 w-20">
-                    <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                    <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={volunteer.avatar} alt={volunteer.name} />
+                    <AvatarFallback>{volunteer.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <Button variant="outline" type="button">Change Photo</Button>
                 </div>
@@ -111,7 +173,7 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="your.email@example.com" {...field} />
+                          <Input placeholder="your.email@example.com" {...field} readOnly disabled/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
