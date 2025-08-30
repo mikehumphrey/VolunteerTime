@@ -31,7 +31,7 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { currentUser } from '@/lib/data';
+import { volunteers } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 
@@ -61,6 +61,7 @@ const OffTheChainLogo = () => (
 function AppLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
+  const currentUser = volunteers.find(v => v.email === 'frankie@example.com');
   
   return (
     <>
@@ -92,30 +93,32 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="p-4">
-          <div className="flex items-center gap-3">
-             <Avatar>
-              <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-              <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold">{currentUser.name}</span>
-              <span className="text-xs text-muted-foreground">{currentUser.email}</span>
+        {currentUser && (
+            <SidebarFooter className="p-4">
+            <div className="flex items-center gap-3">
+                <Avatar>
+                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                <span className="text-sm font-semibold">{currentUser.name}</span>
+                <span className="text-xs text-muted-foreground">{currentUser.email}</span>
+                </div>
             </div>
-          </div>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <a href="https://www.instagram.com/offthechainak/" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="icon" className="text-sidebar-foreground/70 hover:text-sidebar-foreground">
-                    <Instagram className="h-5 w-5" />
-                </Button>
-            </a>
-            <a href="https://www.facebook.com/offthechainak" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="icon" className="text-sidebar-foreground/70 hover:text-sidebar-foreground">
-                    <Facebook className="h-5 w-5" />
-                </Button>
-            </a>
-          </div>
-        </SidebarFooter>
+            <div className="flex items-center justify-center gap-2 mt-4">
+                <a href="https://www.instagram.com/offthechainak/" target="_blank" rel="noopener noreferrer">
+                    <Button variant="ghost" size="icon" className="text-sidebar-foreground/70 hover:text-sidebar-foreground">
+                        <Instagram className="h-5 w-5" />
+                    </Button>
+                </a>
+                <a href="https://www.facebook.com/offthechainak" target="_blank" rel="noopener noreferrer">
+                    <Button variant="ghost" size="icon" className="text-sidebar-foreground/70 hover:text-sidebar-foreground">
+                        <Facebook className="h-5 w-5" />
+                    </Button>
+                </a>
+            </div>
+            </SidebarFooter>
+        )}
       </Sidebar>
       <SidebarInset>
         <header className="flex h-14 items-center gap-4 border-b bg-card/50 px-6 md:hidden">

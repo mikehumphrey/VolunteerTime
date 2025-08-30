@@ -18,7 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { currentUser } from '@/lib/data';
+import { volunteers } from '@/lib/data';
+
+const currentUser = volunteers.find(v => v.email === 'frankie@example.com')!;
 
 const profileFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50, "Name must not be longer than 50 characters."),

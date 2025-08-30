@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileDown, BrainCircuit, Loader2 } from "lucide-react";
-import { volunteers, currentUser, Volunteer } from "@/lib/data";
+import { volunteers, Volunteer } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateMotivation } from '@/ai/flows/generate-motivation-flow';
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +23,8 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState('');
   const { toast } = useToast();
+  const currentUser = volunteers.find(v => v.email === 'frankie@example.com')!;
+
 
   const handleGenerateSummary = async () => {
     setLoading(true);
@@ -118,7 +120,7 @@ export default function ReportsPage() {
             </TableHeader>
             <TableBody>
               {volunteers.sort((a,b) => b.hours - a.hours).map((volunteer) => (
-                <TableRow key={volunteer.id}>
+                <TableRow key={volunteer.id} className={volunteer.id === currentUser.id ? 'bg-muted/50' : ''}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar>
@@ -126,7 +128,7 @@ export default function ReportsPage() {
                         <AvatarFallback>{volunteer.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium">{volunteer.name}</div>
+                        <div className="font-medium">{volunteer.name} {volunteer.id === currentUser.id ? '(You)' : ''}</div>
                         <div className="text-sm text-muted-foreground">{volunteer.email}</div>
                       </div>
                     </div>
