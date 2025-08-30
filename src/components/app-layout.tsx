@@ -10,6 +10,7 @@ import {
   Store,
   List,
   Users,
+  Settings,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -35,6 +36,7 @@ const navItems = [
   { href: '/store', icon: Store, label: 'Store' },
   { href: '/transactions', icon: List, label: 'Transactions' },
   { href: '/profile', icon: User, label: 'Profile' },
+  { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 const OffTheChainLogo = () => (

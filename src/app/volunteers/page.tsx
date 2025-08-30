@@ -36,19 +36,22 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { MoreHorizontal, UserPlus, Edit, Trash2, Globe, Phone } from "lucide-react";
-import { volunteers as initialVolunteers, Volunteer } from "@/lib/data";
+import { Switch } from "@/components/ui/switch";
+import { MoreHorizontal, UserPlus, Edit, Trash2, Phone, FileText, CheckCircle, XCircle } from "lucide-react";
+import { volunteers as initialVolunteers, Volunteer, appSettings } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
+import Link from 'next/link';
 
 const volunteerFormSchema = z.object({
   id: z.number().optional(),
@@ -59,6 +62,8 @@ const volunteerFormSchema = z.object({
   twitter: z.string().optional(),
   facebook: z.string().optional(),
   instagram: z.string().optional(),
+  formCompleted: z.boolean().default(false),
+  formUrl: z.string().url("Please enter a valid URL.").optional().or(z.literal('')),
 });
 
 type VolunteerFormValues = z.infer<typeof volunteerFormSchema>;
@@ -79,12 +84,14 @@ export default function VolunteersPage() {
       twitter: "",
       facebook: "",
       instagram: "",
+      formCompleted: false,
+      formUrl: "",
     },
   });
 
   const handleAddClick = () => {
     setEditingVolunteer(null);
-    form.reset({ name: "", email: "", hours: 0, phone: "", twitter: "", facebook: "", instagram: "" });
+    form.reset({ name: "", email: "", hours: 0, phone: "", twitter: "", facebook: "", instagram: "", formCompleted: false, formUrl: "" });
     setIsFormOpen(true);
   };
 
@@ -250,6 +257,59 @@ export default function VolunteersPage() {
                     </FormItem>
                   )}
                 />
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Volunteer Form</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="formCompleted"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                          <div className="space-y-0.5">
+                            <FormLabel>Form Completed</FormLabel>
+                            <FormDescription>
+                              Has the volunteer completed the application form?
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="formUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Form Data URL</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Link to submitted form data" {...field} />
+                          </FormControl>
+                           <FormDescription>
+                            Link to the volunteer's submitted form data (e.g., a pre-filled Google Form link).
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="flex gap-2">
+                        <Button type="button" variant="outline" size="sm" asChild>
+                           <Link href={appSettings.volunteerFormUrl} target="_blank"><FileText className="mr-2 h-4 w-4"/>View Blank Form</Link>
+                        </Button>
+                        {form.watch("formUrl") && (
+                           <Button type="button" variant="outline" size="sm" asChild>
+                              <Link href={form.watch("formUrl")!} target="_blank"><FileText className="mr-2 h-4 w-4"/>View Submitted Data</Link>
+                           </Button>
+                        )}
+                    </div>
+                  </CardContent>
+                </Card>
                 <DialogFooter className="sticky bottom-0 bg-background pt-4">
                   <DialogClose asChild>
                      <Button type="button" variant="ghost">Cancel</Button>
@@ -275,6 +335,7 @@ export default function VolunteersPage() {
               <TableRow>
                 <TableHead>Volunteer</TableHead>
                 <TableHead>Contact</TableHead>
+                <TableHead>Form Completed</TableHead>
                 <TableHead>Total Hours</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -311,6 +372,13 @@ export default function VolunteersPage() {
                            {volunteer.instagram && <a href={`https://instagram.com/${volunteer.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Instagram</a>}
                         </div>
                      </div>
+                  </TableCell>
+                  <TableCell>
+                    {volunteer.formCompleted ? (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-muted-foreground" />
+                    )}
                   </TableCell>
                   <TableCell className="font-mono">{volunteer.hours} hrs</TableCell>
                   <TableCell className="text-right">
