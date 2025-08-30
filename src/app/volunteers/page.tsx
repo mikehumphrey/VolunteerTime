@@ -42,7 +42,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { MoreHorizontal, UserPlus, Edit, Trash2 } from "lucide-react";
+import { MoreHorizontal, UserPlus, Edit, Trash2, Globe, Phone } from "lucide-react";
 import { volunteers as initialVolunteers, Volunteer } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useForm } from "react-hook-form";
@@ -55,6 +55,10 @@ const volunteerFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   email: z.string().email("Please enter a valid email."),
   hours: z.coerce.number().min(0, "Hours cannot be negative."),
+  phone: z.string().optional(),
+  twitter: z.string().optional(),
+  linkedin: z.string().optional(),
+  github: z.string().optional(),
 });
 
 type VolunteerFormValues = z.infer<typeof volunteerFormSchema>;
@@ -71,12 +75,16 @@ export default function VolunteersPage() {
       name: "",
       email: "",
       hours: 0,
+      phone: "",
+      twitter: "",
+      linkedin: "",
+      github: "",
     },
   });
 
   const handleAddClick = () => {
     setEditingVolunteer(null);
-    form.reset({ name: "", email: "", hours: 0 });
+    form.reset({ name: "", email: "", hours: 0, phone: "", twitter: "", linkedin: "", github: "" });
     setIsFormOpen(true);
   };
 
@@ -138,7 +146,7 @@ export default function VolunteersPage() {
               Add Volunteer
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>
                 {editingVolunteer ? "Edit Volunteer" : "Add New Volunteer"}
@@ -150,7 +158,7 @@ export default function VolunteersPage() {
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1">
                 <FormField
                   control={form.control}
                   name="name"
@@ -179,6 +187,19 @@ export default function VolunteersPage() {
                 />
                 <FormField
                   control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="(123) 456-7890" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="hours"
                   render={({ field }) => (
                     <FormItem>
@@ -190,7 +211,46 @@ export default function VolunteersPage() {
                     </FormItem>
                   )}
                 />
-                <DialogFooter>
+                 <FormField
+                  control={form.control}
+                  name="twitter"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Twitter Profile</FormLabel>
+                      <FormControl>
+                        <Input placeholder="@username" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="linkedin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn Profile</FormLabel>
+                      <FormControl>
+                        <Input placeholder="in/username" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="github"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>GitHub Profile</FormLabel>
+                      <FormControl>
+                        <Input placeholder="username" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter className="sticky bottom-0 bg-background pt-4">
                   <DialogClose asChild>
                      <Button type="button" variant="ghost">Cancel</Button>
                   </DialogClose>
@@ -214,6 +274,7 @@ export default function VolunteersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Volunteer</TableHead>
+                <TableHead>Contact</TableHead>
                 <TableHead>Total Hours</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -240,6 +301,16 @@ export default function VolunteersPage() {
                         </div>
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                     <div className="flex flex-col gap-1">
+                        {volunteer.phone && <div className="flex items-center gap-2 text-sm"><Phone className="w-3 h-3 text-muted-foreground" /> <span>{volunteer.phone}</span></div>}
+                        <div className="flex items-center gap-2 text-sm">
+                           {volunteer.twitter && <a href={`https://twitter.com/${volunteer.twitter.replace('@','')}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Twitter</a>}
+                           {volunteer.linkedin && <a href={`https://linkedin.com/${volunteer.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">LinkedIn</a>}
+                           {volunteer.github && <a href={`https://github.com/${volunteer.github}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">GitHub</a>}
+                        </div>
+                     </div>
                   </TableCell>
                   <TableCell className="font-mono">{volunteer.hours} hrs</TableCell>
                   <TableCell className="text-right">

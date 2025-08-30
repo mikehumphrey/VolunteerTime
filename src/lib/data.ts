@@ -4,14 +4,18 @@ export type Volunteer = {
   email: string;
   avatar: string;
   hours: number;
+  phone?: string;
+  twitter?: string;
+  linkedin?: string;
+  github?: string;
 };
 
 export const volunteers: Volunteer[] = [
-  { id: 1, name: 'Alice Johnson', email: 'alice@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704a', hours: 42 },
-  { id: 2, name: 'Bob Williams', email: 'bob@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704b', hours: 28 },
-  { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704c', hours: 55 },
-  { id: 4, name: 'Diana Miller', email: 'diana@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d', hours: 19 },
-  { id: 5, name: 'Ethan Davis', email: 'ethan@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704e', hours: 34 },
+  { id: 1, name: 'Alice Johnson', email: 'alice@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704a', hours: 42, phone: '555-0101', twitter: '@alicej' },
+  { id: 2, name: 'Bob Williams', email: 'bob@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704b', hours: 28, phone: '555-0102', linkedin: 'in/bobw' },
+  { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704c', hours: 55, phone: '555-0103', github: 'charlieb' },
+  { id: 4, name: 'Diana Miller', email: 'diana@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d', hours: 19, phone: '555-0104' },
+  { id: 5, name: 'Ethan Davis', email: 'ethan@example.com', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704e', hours: 34, phone: '555-0105', twitter: '@ethand' },
 ];
 
 export const currentUser = {
@@ -19,6 +23,9 @@ export const currentUser = {
   email: 'frankie@example.com',
   phone: '555-123-4567',
   avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704f',
+  twitter: '@frankie',
+  linkedin: 'in/frankieadams',
+  github: 'frankieadams',
 };
 
 export type StoreItem = {
