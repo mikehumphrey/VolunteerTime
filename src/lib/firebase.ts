@@ -3,12 +3,12 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  projectId: "volunteertime",
-  appId: "1:51265831804:web:2d52fbeb94bb906ee11af9",
-  storageBucket: "volunteertime.firebasestorage.app",
-  apiKey: "AIzaSyD4ozgXb3N861jbbYok1NO3XBWkLK9D4zo",
-  authDomain: "volunteertime.firebaseapp.com",
-  messagingSenderId: "51265831804"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase

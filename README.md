@@ -11,7 +11,7 @@ This is a Next.js application designed to help organizations manage volunteers, 
   - `firestore.ts`: All interaction logic with the Firestore database.
 - `src/ai/`: Contains all the Genkit AI flows for features like motivational summaries.
 - `public/`: Static assets.
-- `.env.local`: For local environment variables.
+- `.env.local`: For local environment variables. **This file is not in Git.**
 - `apphosting.yaml`: Configuration for Firebase App Hosting.
 
 ---
@@ -37,14 +37,32 @@ npm install
 
 ### 3. Environment Variables
 
-Create a `.env.local` file in the root of your project to store your environment variables. This file is for local development and should not be committed to version control.
+Create a file named `.env.local` in the root of your project by copying the `.env` template. This file is for your local development and **will not be committed to version control**.
+
+```bash
+cp .env .env.local
+```
+
+Now, open `.env.local` and fill in your project's specific keys:
 
 ```
 # .env.local
-GEMINI_API_KEY=your_google_ai_studio_api_key
+
+# Get this from the Google AI Studio
+GEMINI_API_KEY="your_google_ai_studio_api_key"
+
+# Get these from your Firebase project settings
+# (Firebase Console > Project Settings > General > Your apps > SDK setup and configuration)
+NEXT_PUBLIC_FIREBASE_API_KEY="your_firebase_api_key"
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your_firebase_auth_domain"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="your_firebase_project_id"
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your_firebase_storage_bucket"
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="your_firebase_messaging_sender_id"
+NEXT_PUBLIC_FIREBASE_APP_ID="your_firebase_app_id"
 ```
 
 - **`GEMINI_API_KEY`**: This is required for the AI features to work. You can obtain a key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+- **Firebase Keys**: These are required to connect your application to your Firebase backend. You can find these values in your Firebase project settings. All Firebase keys intended for the browser **must** be prefixed with `NEXT_PUBLIC_`.
 
 ### 4. Running the Development Server
 
@@ -64,9 +82,17 @@ This will start the Next.js development server, typically on `http://localhost:9
 
 This application is configured to use Firebase. The configuration is located in `src/lib/firebase.ts`.
 
-- **Firestore Database**: The application uses Firestore to store all data. Make sure your Firebase project has Firestore enabled.
+#### Firestore Database Setup
+You must first create the Firestore database in your project.
+1.  Go to the [Firebase Console](https://console.firebase.google.com/) and select your project.
+2.  Navigate to **Build > Firestore Database**.
+3.  Click **Create database**.
+4.  Select **Start in production mode**.
+5.  Choose a location for your database (e.g., `us-west1`).
+6.  Click **Enable**.
 
-- **Authentication Providers**: You must enable the sign-in providers you want to use.
+#### Authentication Providers
+You must enable the sign-in providers you want to use.
   1. Go to the [Firebase Console](https://console.firebase.google.com) and select your project.
   2. Navigate to **Build > Authentication**.
   3. Select the **Sign-in method** tab.
@@ -74,7 +100,8 @@ This application is configured to use Firebase. The configuration is located in 
   5. Enable **Google**, provide a project support email, and click Save.
 
 
-- **Security Rules**: **This is a critical step.** You must configure Firestore Security Rules to secure your data. Go to your Firebase project -> Firestore Database -> Rules and paste the following:
+#### Security Rules
+**This is a critical step.** You must configure Firestore Security Rules to secure your data. Go to your Firebase project -> Firestore Database -> Rules and paste the following:
 
 ```
 rules_version = '2';
