@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import {
   BrainCircuit,
   FileDown,
@@ -48,21 +49,13 @@ const navItems = [
 ];
 
 const OffTheChainLogo = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className="size-6 text-primary"
-    >
-      <path
-        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
-        opacity="0.3"
-      />
-      <path d="M12 4.5c-4.14 0-7.5 3.36-7.5 7.5s3.36 7.5 7.5 7.5 7.5-3.36 7.5-7.5-3.36-7.5-7.5-7.5zm4.62 10.38l-1.41-1.41L12 11.35l-3.21 2.12 1.41-1.41-2.12-2.12 1.41-1.41 2.12 2.12 3.21-2.12-1.41 1.41 2.12 2.12z" />
-      <path d="M12,9c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,9,12,9z" />
-      <path d="M15.5 10.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm-7 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
-      <path d="M12 14.5c-1.66 0-3-1.34-3-3h6c0 1.66-1.34 3-3 3z" />
-    </svg>
+    <Image 
+        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQXvmkXqYdbZAHqMcoKqcbEtvJFEtaAP18Sqg&s" 
+        alt="Off the Chain Logo" 
+        width={36} 
+        height={36}
+        className="rounded-full"
+    />
   );
 
 function AppLayoutContent({ children }: { children: ReactNode }) {
@@ -73,10 +66,8 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     <>
       <Sidebar>
         <SidebarHeader className="p-4">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="text-primary hover:bg-primary/10">
-              <OffTheChainLogo />
-            </Button>
+          <div className="flex items-center gap-3">
+             <OffTheChainLogo />
             <div className="flex flex-col">
               <h2 className="text-lg font-semibold font-headline tracking-tight uppercase">
                 Off the Chain
