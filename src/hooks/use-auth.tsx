@@ -49,12 +49,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (volunteerData) {
           setVolunteer(volunteerData);
         } else {
-            // This case can happen if user exists in Auth but not in Firestore.
-            // You might want to create a volunteer profile here.
-            console.warn("No volunteer data found for UID:", user.uid);
+            // This case can happen if user exists in Auth but not in Firestore,
+            // for instance if the DB record wasn't created properly on sign up.
+            // The googleSignIn and signup functions handle creation, but this is a fallback.
+            console.warn("No volunteer data found for UID:", user.uid, "Creating a new record as a fallback.");
             const newVolunteer: Volunteer = {
                 id: user.uid,
-                name: user.displayName || 'New Volunteer',
+                name: user.displayName || 'New Google User',
                 email: user.email!,
                 avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
                 hours: 0,
@@ -79,9 +80,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return signInWithEmailAndPassword(auth, email, pass);
   };
 
-  const googleSignIn = () => {
+  const googleSignIn = async () => {
     const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+    const userCredential = await signInWithPopup(auth, provider);
+    const user = userCredential.user;
+
+    // Check if volunteer already exists in Firestore
+    const existingVolunteer = await getVolunteerById(user.uid);
+    if (!existingVolunteer) {
+        // If not, create a new volunteer profile
+        const newVolunteer: Volunteer = {
+            id: user.uid,
+            name: user.displayName || 'New Volunteer',
+            email: user.email!,
+            avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
+            hours: 0,
+            isAdmin: false,
+            privacySettings: { showPhone: true, showSocial: true },
+        };
+        await createVolunteer(newVolunteer);
+        setVolunteer(newVolunteer);
+    } else {
+        setVolunteer(existingVolunteer);
+    }
+    
+    setUser(user);
+    return userCredential;
   };
 
   const signup = async (email: string, pass: string, name: string) => {
@@ -117,7 +141,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     googleSignIn,
     signup,
-    logout,
+logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
