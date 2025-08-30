@@ -9,6 +9,7 @@ import {
   User,
   Handshake,
   Store,
+  List,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -31,6 +32,7 @@ const navItems = [
   { href: '/reports', icon: FileDown, label: 'Reports' },
   { href: '/summary', icon: BrainCircuit, label: 'AI Summary' },
   { href: '/store', icon: Store, label: 'Store' },
+  { href: '/transactions', icon: List, label: 'Transactions' },
   { href: '/profile', icon: User, label: 'Profile' },
 ];
 
