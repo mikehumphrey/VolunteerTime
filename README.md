@@ -190,3 +190,11 @@ gcloud firestore export gs://<your-bucket-name> --project=<your-firebase-project
 ```
 
 For detailed, step-by-step instructions, follow the official Firebase documentation on **[Exporting and Importing Data](https://firebase.google.com/docs/firestore/manage-data/export-import)**. Scheduling regular backups (e.g., daily or weekly) is highly recommended for production applications.
+
+---
+
+### **IMPORTANT: Security Note on API Keys**
+
+It is **critical** that you never commit API keys directly into your git repository. If you have ever accidentally committed a file with a key (even if you removed it in a later commit), you **must** revoke that key immediately and generate a new one. The old key is still present in your git history and can be found by malicious actors.
+
+Follow GitHub's official guide on [Removing sensitive data from a repository](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository) to scrub the key from your history permanently.
