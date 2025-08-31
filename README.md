@@ -2,16 +2,38 @@
 
 This is a Next.js application designed to help organizations manage volunteers, track their hours, and engage with them effectively. It uses Firebase for the backend database (Firestore) and Genkit for AI-powered features.
 
+## Architecture Overview
+
+### Frontend
+- **Framework**: [Next.js](https://nextjs.org/) (using the App Router) with [React](https://react.dev/).
+- **UI Components**: Built with [ShadCN UI](https://ui.shadcn.com/), a collection of reusable components.
+- **Styling**: Styled with [Tailwind CSS](https://tailwindcss.com/), a utility-first CSS framework.
+- **Authentication**: Client-side authentication state is managed through the `useAuth` hook (`src/hooks/use-auth.tsx`).
+
+### Backend
+- **Database**: [Firestore](https://firebase.google.com/docs/firestore) is used as the primary NoSQL database for storing all application data.
+- **Authentication**: [Firebase Authentication](https://firebase.google.com/docs/auth) handles user sign-up and sign-in (Email/Password and Google).
+- **AI Features**: [Genkit](https://firebase.google.com/docs/genkit) is used to create AI-powered "flows" that connect to Google's Gemini models for features like report summarization.
+- **Hosting**: The entire application is configured for deployment on [Firebase App Hosting](https://firebase.google.com/docs/app-hosting).
+
+
 ## Project Structure
 
-- `src/app/`: Contains all the pages and routes for the Next.js application.
-- `src/components/`: Shared React components used across the application.
+- `src/app/`: Contains all the pages and routes for the Next.js application. Each folder corresponds to a URL path (e.g., `src/app/dashboard/page.tsx` is the `/dashboard` route).
+- `src/components/`: Contains shared React components.
+  - `ui/`: Core UI components from ShadCN (e.g., Button, Card, Input).
+  - `app-layout.tsx`: The main layout component that includes the sidebar and navigation.
+- `src/hooks/`: Custom React hooks for managing application state.
+  - `use-auth.tsx`: Manages all user authentication logic, including login, logout, and user session state.
+  - `use-toast.ts`: A hook for displaying notification popups (toasts).
 - `src/lib/`: Core application logic and utilities.
   - `firebase.ts`: Firebase SDK initialization and configuration.
-  - `firestore.ts`: All interaction logic with the Firestore database.
-- `src/ai/`: Contains all the Genkit AI flows for features like motivational summaries.
-- `public/`: Static assets.
-- `.env.local`: For local environment variables. **This file is not in Git.**
+  - `firestore.ts`: All interaction logic with the Firestore database (e.g., getting volunteers, adding transactions).
+  - `data.ts`: Defines the data structures (types) and provides initial mock data for seeding.
+- `src/ai/`: Contains all the Genkit AI flows.
+  - `flows/`: Each file defines a specific AI capability, such as generating a motivational summary.
+- `public/`: Static assets like images or fonts.
+- `.env.local`: **(Not in Git)** Your local file for storing secret API keys.
 - `apphosting.yaml`: Configuration for Firebase App Hosting.
 
 ---
@@ -47,37 +69,11 @@ npm install
     cp .env .env.local
     ```
 
-2.  **Edit the file**: Open your new `.env.local` file in a text editor. You will see the following content:
-
-    ```
-    # .env.local
-
-    # Get this from the Google AI Studio
-    GEMINI_API_KEY="your_google_ai_studio_api_key"
-
-    # Get these from your Firebase project settings
-    # (Firebase Console > Project Settings > General > Your apps > SDK setup and configuration)
-    NEXT_PUBLIC_FIREBASE_API_KEY="your_firebase_api_key"
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your_firebase_auth_domain"
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID="your_firebase_project_id"
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your_firebase_storage_bucket"
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="your_firebase_messaging_sender_id"
-    NEXT_PUBLIC_FIREBASE_APP_ID="your_firebase_app_id"
-    ```
+2.  **Edit the file**: Open your new `.env.local` file in a text editor. You will see placeholders for your API keys.
 
 3.  **Fill in the values**:
     *   **`GEMINI_API_KEY`**: This is required for the AI features. Go to [Google AI Studio](https://aistudio.google.com/app/apikey), sign in, and click **"Create API key"** to generate a new key.
     *   **Firebase Keys**: These are required to connect to your Firebase backend. You can find these in your **Firebase Console**. Go to **Project Settings** > **General** > **Your apps**. Select your web app, find the `firebaseConfig` object, and copy the corresponding values. All Firebase keys meant for the browser **must** be prefixed with `NEXT_PUBLIC_`.
-
-### 4. Running the Development Server
-
-To run the application in development mode, use the following command:
-
-```bash
-npm run dev
-```
-
-This will start the Next.js development server, typically on `http://localhost:9002`.
 
 ---
 
@@ -85,7 +81,7 @@ This will start the Next.js development server, typically on `http://localhost:9
 
 ### 1. Firebase Project Setup
 
-This application is configured to use Firebase. The configuration is located in `src/lib/firebase.ts`.
+This application is configured to use Firebase.
 
 #### Firestore Database Setup
 You must first create the Firestore database in your project.
