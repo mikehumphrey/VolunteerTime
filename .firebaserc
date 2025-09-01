@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "volunteertime"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }
