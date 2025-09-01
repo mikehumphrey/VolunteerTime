@@ -2,8 +2,8 @@
 'use server';
 
 import { db } from './firebase';
-import { collection, doc, getDoc, setDoc, updateDoc, getDocs, writeBatch, query } from 'firebase/firestore';
-import { Volunteer, StoreItem, Transaction, volunteers as mockVolunteers, storeItems as mockStoreItems } from './data';
+import { collection, doc, getDoc, setDoc, updateDoc, getDocs, writeBatch, query, Timestamp } from 'firebase/firestore';
+import { Volunteer, StoreItem, Transaction, volunteers as mockVolunteers, storeItems as mockStoreItems, ClockEvent } from './data';
 
 // Volunteer Management
 export async function getVolunteers(): Promise<Volunteer[]> {
@@ -48,6 +48,7 @@ export async function createVolunteer(volunteer: Volunteer): Promise<void> {
             twitter: volunteer.twitter || "",
             facebook: volunteer.facebook || "",
             instagram: volunteer.instagram || "",
+            currentClockEventId: null,
         });
     } catch (error) {
         console.error("Error creating volunteer: ", error);
@@ -130,6 +131,83 @@ export async function addTransaction(volunteerId: string, itemId: string, hoursD
         console.error("Error processing transaction: ", error);
         throw error;
     }
+}
+
+// Clock Event Management
+export async function clockIn(volunteerId: string): Promise<string> {
+    const batch = writeBatch(db);
+    
+    // Create a new clock event
+    const newEventRef = doc(collection(db, 'clockEvents'));
+    const newEvent: Omit<ClockEvent, 'id'> = {
+        volunteerId,
+        startTime: new Date(),
+        status: 'active',
+    };
+    batch.set(newEventRef, newEvent);
+
+    // Update the volunteer's currentClockEventId
+    const volunteerRef = doc(db, 'volunteers', volunteerId);
+    batch.update(volunteerRef, { currentClockEventId: newEventRef.id });
+
+    await batch.commit();
+    return newEventRef.id;
+}
+
+export async function clockOut(volunteerId: string, eventId: string, currentHours: number): Promise<void> {
+    const batch = writeBatch(db);
+    const eventRef = doc(db, 'clockEvents', eventId);
+    const eventSnap = await getDoc(eventRef);
+
+    if (!eventSnap.exists()) {
+        throw new Error("Clock event not found!");
+    }
+
+    const eventData = eventSnap.data() as ClockEvent;
+    const startTime = (eventData.startTime as unknown as Timestamp).toDate();
+    const endTime = new Date();
+    
+    const durationMs = endTime.getTime() - startTime.getTime();
+    const hoursAccumulated = durationMs / (1000 * 60 * 60);
+    const newTotalHours = currentHours + hoursAccumulated;
+
+    // Update the clock event
+    batch.update(eventRef, {
+        endTime: endTime,
+        status: 'completed',
+        hoursAccumulated: hoursAccumulated
+    });
+
+    // Update the volunteer's record
+    const volunteerRef = doc(db, 'volunteers', volunteerId);
+    batch.update(volunteerRef, {
+        currentClockEventId: null,
+        hours: newTotalHours
+    });
+
+    await batch.commit();
+}
+
+
+export async function getClockEventById(id: string): Promise<ClockEvent | null> {
+  try {
+    const eventRef = doc(db, 'clockEvents', id);
+    const eventSnap = await getDoc(eventRef);
+    if (eventSnap.exists()) {
+        const data = eventSnap.data();
+      return { 
+          id: eventSnap.id,
+          ...data,
+          startTime: (data.startTime as unknown as Timestamp).toDate(),
+          endTime: data.endTime ? (data.endTime as unknown as Timestamp).toDate() : undefined,
+        } as ClockEvent;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching clock event by ID: ", error);
+    return null;
+  }
 }
 
 

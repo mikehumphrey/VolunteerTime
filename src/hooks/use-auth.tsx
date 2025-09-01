@@ -7,6 +7,7 @@ import {
   createContext,
   useContext,
   ReactNode,
+  useCallback,
 } from 'react';
 import {
   onAuthStateChanged,
@@ -31,6 +32,7 @@ interface AuthContextType {
   googleSignIn: () => Promise<any>;
   signup: (email: string, pass: string, name: string) => Promise<any>;
   logout: () => Promise<void>;
+  refreshVolunteer: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,6 +42,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [volunteer, setVolunteer] = useState<Volunteer | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const refreshVolunteer = useCallback(async () => {
+    if (user) {
+      const volunteerData = await getVolunteerById(user.uid);
+      if (volunteerData) {
+        setVolunteer(volunteerData);
+      }
+    }
+  }, [user]);
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -61,6 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 hours: 0,
                 isAdmin: false,
                 privacySettings: { showPhone: true, showSocial: true },
+                currentClockEventId: null,
             };
             await createVolunteer(newVolunteer);
             setVolunteer(newVolunteer);
@@ -97,6 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             hours: 0,
             isAdmin: false,
             privacySettings: { showPhone: true, showSocial: true },
+            currentClockEventId: null,
         };
         await createVolunteer(newVolunteer);
         setVolunteer(newVolunteer);
@@ -120,6 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         hours: 0,
         isAdmin: false,
         privacySettings: { showPhone: true, showSocial: true },
+        currentClockEventId: null,
     };
 
     await createVolunteer(newVolunteer);
@@ -141,7 +156,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     googleSignIn,
     signup,
-logout,
+    logout,
+    refreshVolunteer,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

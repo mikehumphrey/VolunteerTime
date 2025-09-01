@@ -15,8 +15,19 @@ export type Volunteer = {
   privacySettings?: {
     showPhone: boolean;
     showSocial: boolean;
-  }
+  };
+  currentClockEventId?: string | null;
 };
+
+export type ClockEvent = {
+    id: string;
+    volunteerId: string;
+    startTime: Date;
+    endTime?: Date;
+    status: 'active' | 'completed';
+    hoursAccumulated?: number;
+};
+
 
 // This mock data is now only used for seeding the database.
 export const volunteers: Omit<Volunteer, 'id'>[] = [
