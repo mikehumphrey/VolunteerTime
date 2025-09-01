@@ -46,6 +46,7 @@ Follow these steps to set up and run the application on your local machine.
 
 - [Node.js](https://nodejs.org/) (version 20 or later)
 - [npm](https://www.npmjs.com/) (usually comes with Node.js)
+- [Firebase CLI](https://firebase.google.com/docs/cli) (for running the local emulators)
 
 ### 2. Installation
 
@@ -74,6 +75,24 @@ npm install
 3.  **Fill in the values**:
     *   **`GEMINI_API_KEY`**: This is required for the AI features. Go to [Google AI Studio](https://aistudio.google.com/app/apikey), sign in, and click **"Create API key"** to generate a new key.
     *   **Firebase Keys**: These are required to connect to your Firebase backend. You can find these in your **Firebase Console**. Go to **Project Settings** > **General** > **Your apps**. Select your web app, find the `firebaseConfig` object, and copy the corresponding values. All Firebase keys meant for the browser **must** be prefixed with `NEXT_PUBLIC_`.
+
+### 4. Running with Firebase Emulators (Recommended)
+
+For most development, it's best to use the Firebase Emulator Suite. This runs a local version of Firebase on your machine, so you don't have to touch your live production data.
+
+To start the app and connect to the local emulators, run:
+```bash
+npm run dev:emulators
+```
+This command starts the Firestore and Auth emulators and then starts the Next.js development server. The app will automatically connect to the emulators. You can see the Emulator UI at [http://localhost:4000](http://localhost:4000).
+
+### 5. Running Against Production (Live) Data
+
+If you need to test against your live Firebase data, you can run the standard development command:
+```bash
+npm run dev
+```
+**Warning:** Be careful when working directly with production data.
 
 ---
 

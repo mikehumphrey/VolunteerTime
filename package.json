@@ -9,7 +9,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "firebase:emulators": "firebase emulators:start --import=./firebase-seed --export-on-exit",
+    "dev:emulators": "npm run firebase:emulators & npm run dev"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.14.1",
