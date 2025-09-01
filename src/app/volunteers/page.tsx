@@ -1,6 +1,6 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -44,8 +44,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { MoreHorizontal, UserPlus, Edit, Trash2, Phone, FileText, CheckCircle, XCircle, Shield } from "lucide-react";
-import { volunteers as initialVolunteers, Volunteer, appSettings } from "@/lib/data";
+import { MoreHorizontal, UserPlus, Edit, Trash2, Phone, FileText, CheckCircle, XCircle, Shield, Loader2 } from "lucide-react";
+import { Volunteer, appSettings } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,9 +53,11 @@ import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { getVolunteers, updateVolunteer, createVolunteer, deleteVolunteer } from '@/lib/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const volunteerFormSchema = z.object({
-  id: z.number().optional(),
+  id: z.string().optional(),
   name: z.string().min(2, "Name must be at least 2 characters."),
   email: z.string().email("Please enter a valid email."),
   hours: z.coerce.number().min(0, "Hours cannot be negative."),
@@ -66,30 +68,35 @@ const volunteerFormSchema = z.object({
   formCompleted: z.boolean().default(false),
   formUrl: z.string().url("Please enter a valid URL.").optional().or(z.literal('')),
   isAdmin: z.boolean().default(false),
+  privacySettings: z.object({
+      showPhone: z.boolean().default(true),
+      showSocial: z.boolean().default(true),
+    }).optional(),
 });
 
 type VolunteerFormValues = z.infer<typeof volunteerFormSchema>;
 
 export default function VolunteersPage() {
-  const [volunteers, setVolunteers] = useState<Volunteer[]>(initialVolunteers);
+  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingVolunteer, setEditingVolunteer] = useState<Volunteer | null>(null);
   const { toast } = useToast();
 
+  const fetchVolunteers = async () => {
+    setLoading(true);
+    const volunteerList = await getVolunteers();
+    setVolunteers(volunteerList);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchVolunteers();
+  }, []);
+
   const form = useForm<VolunteerFormValues>({
     resolver: zodResolver(volunteerFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      hours: 0,
-      phone: "",
-      twitter: "",
-      facebook: "",
-      instagram: "",
-      formCompleted: false,
-      formUrl: "",
-      isAdmin: false,
-    },
   });
 
   const handleAddClick = () => {
@@ -104,42 +111,73 @@ export default function VolunteersPage() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteClick = (volunteerId: number) => {
-    setVolunteers(volunteers.filter((v) => v.id !== volunteerId));
-    toast({
-      title: "Volunteer Deleted",
-      description: "The volunteer has been removed successfully.",
-    });
+  const handleDeleteClick = async (volunteerId: string) => {
+    if (confirm("Are you sure you want to delete this volunteer? This action cannot be undone.")) {
+      try {
+        await deleteVolunteer(volunteerId);
+        toast({
+          title: "Volunteer Deleted",
+          description: "The volunteer has been removed successfully.",
+        });
+        fetchVolunteers();
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete volunteer.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
-  const onSubmit = (data: VolunteerFormValues) => {
-    if (editingVolunteer) {
-      // Edit existing volunteer
-      const updatedVolunteers = volunteers.map((v) =>
-        v.id === editingVolunteer.id ? { ...v, ...data } : v
-      );
-      setVolunteers(updatedVolunteers);
+  const onSubmit = async (data: VolunteerFormValues) => {
+    setIsSubmitting(true);
+    try {
+      if (editingVolunteer) {
+        // Edit existing volunteer
+        await updateVolunteer(editingVolunteer.id, data);
+        toast({
+          title: "Volunteer Updated",
+          description: "The volunteer's information has been updated.",
+        });
+      } else {
+        // Add new volunteer
+        await createVolunteer(data);
+        toast({
+          title: "Volunteer Added",
+          description: `${data.name} has been added to the list.`,
+        });
+      }
+      setIsFormOpen(false);
+      fetchVolunteers(); // Refresh the list
+    } catch (error) {
       toast({
-        title: "Volunteer Updated",
-        description: "The volunteer's information has been updated.",
+        title: "Submission Failed",
+        description: "An error occurred while saving the volunteer.",
+        variant: "destructive",
       });
-    } else {
-      // Add new volunteer
-      const newVolunteer: Volunteer = {
-        ...data,
-        id: Math.max(...volunteers.map(v => v.id), 0) + 1,
-        avatar: `https://i.pravatar.cc/150?u=${Math.random()}`,
-        privacySettings: { showPhone: true, showSocial: true },
-      };
-      setVolunteers([...volunteers, newVolunteer]);
-      toast({
-        title: "Volunteer Added",
-        description: `${data.name} has been added to the list.`,
-      });
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsFormOpen(false);
-    form.reset();
   };
+
+  const renderSkeleton = () => (
+    <TableRow>
+        <TableCell>
+           <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            </div>
+        </TableCell>
+        <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+        <TableCell><Skeleton className="h-5 w-5" /></TableCell>
+        <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+        <TableCell className="text-right"><Skeleton className="h-8 w-8" /></TableCell>
+    </TableRow>
+  );
 
   return (
     <div className="space-y-6">
@@ -190,7 +228,7 @@ export default function VolunteersPage() {
                     <FormItem>
                       <FormLabel>Email Address</FormLabel>
                       <FormControl>
-                        <Input placeholder="volunteer@example.com" {...field} />
+                        <Input type="email" placeholder="volunteer@example.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -338,7 +376,10 @@ export default function VolunteersPage() {
                   <DialogClose asChild>
                      <Button type="button" variant="ghost">Cancel</Button>
                   </DialogClose>
-                  <Button type="submit">{editingVolunteer ? "Save Changes" : "Add Volunteer"}</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {editingVolunteer ? "Save Changes" : "Add Volunteer"}
+                  </Button>
                 </DialogFooter>
               </form>
             </Form>
@@ -365,7 +406,14 @@ export default function VolunteersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {volunteers.sort((a,b) => a.name.localeCompare(b.name)).map((volunteer) => (
+              {loading ? (
+                <>
+                  {renderSkeleton()}
+                  {renderSkeleton()}
+                  {renderSkeleton()}
+                </>
+              ) : (
+              volunteers.sort((a,b) => a.name.localeCompare(b.name)).map((volunteer) => (
                 <TableRow key={volunteer.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -412,7 +460,7 @@ export default function VolunteersPage() {
                       <XCircle className="w-5 h-5 text-muted-foreground" />
                     )}
                   </TableCell>
-                  <TableCell className="font-mono">{volunteer.hours} hrs</TableCell>
+                  <TableCell className="font-mono">{Math.round(volunteer.hours)} hrs</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -428,7 +476,7 @@ export default function VolunteersPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDeleteClick(volunteer.id)}
-                          className="text-destructive"
+                          className="text-destructive focus:text-destructive focus:bg-destructive/10"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           <span>Delete</span>
@@ -437,7 +485,7 @@ export default function VolunteersPage() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )))}
             </TableBody>
           </Table>
         </CardContent>

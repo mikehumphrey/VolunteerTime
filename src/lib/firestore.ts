@@ -2,15 +2,23 @@
 'use server';
 
 import { db } from './firebase';
-import { collection, doc, getDoc, setDoc, updateDoc, getDocs, writeBatch, query, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, updateDoc, getDocs, writeBatch, query, Timestamp, deleteDoc, addDoc } from 'firebase/firestore';
 import { Volunteer, StoreItem, Transaction, volunteers as mockVolunteers, storeItems as mockStoreItems, ClockEvent } from './data';
+import { v4 as uuidv4 } from 'uuid';
 
 // Volunteer Management
 export async function getVolunteers(): Promise<Volunteer[]> {
   try {
     const volunteersCol = collection(db, 'volunteers');
     const volunteerSnapshot = await getDocs(volunteersCol);
-    const volunteerList = volunteerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Volunteer));
+    const volunteerList = volunteerSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return { 
+        id: doc.id,
+        ...data,
+        hours: data.hours || 0,
+       } as Volunteer
+    });
     return volunteerList;
   } catch (error) {
     console.error("Error fetching volunteers: ", error);
@@ -34,14 +42,15 @@ export async function getVolunteerById(id: string): Promise<Volunteer | null> {
   }
 }
 
-export async function createVolunteer(volunteer: Volunteer): Promise<void> {
+export async function createVolunteer(volunteer: Partial<Volunteer>): Promise<void> {
     try {
-        const volunteerRef = doc(db, 'volunteers', volunteer.id);
+        const id = volunteer.id || uuidv4();
+        const volunteerRef = doc(db, 'volunteers', id);
         await setDoc(volunteerRef, {
             name: volunteer.name,
             email: volunteer.email,
-            avatar: volunteer.avatar,
-            hours: volunteer.hours,
+            avatar: volunteer.avatar || `https://i.pravatar.cc/150?u=${id}`,
+            hours: volunteer.hours || 0,
             isAdmin: volunteer.isAdmin || false,
             privacySettings: volunteer.privacySettings || { showPhone: true, showSocial: true },
             phone: volunteer.phone || "",
@@ -52,6 +61,7 @@ export async function createVolunteer(volunteer: Volunteer): Promise<void> {
         });
     } catch (error) {
         console.error("Error creating volunteer: ", error);
+        throw error;
     }
 }
 
@@ -59,10 +69,24 @@ export async function createVolunteer(volunteer: Volunteer): Promise<void> {
 export async function updateVolunteer(id: string, data: Partial<Volunteer>): Promise<void> {
   try {
     const volunteerRef = doc(db, 'volunteers', id);
-    await updateDoc(volunteerRef, data);
+    // Remove id from data to prevent it from being written to the document
+    const updateData = { ...data };
+    delete updateData.id;
+    await updateDoc(volunteerRef, updateData);
   } catch (error) {
     console.error("Error updating volunteer: ", error);
+    throw error;
   }
+}
+
+export async function deleteVolunteer(id: string): Promise<void> {
+    try {
+        const volunteerRef = doc(db, 'volunteers', id);
+        await deleteDoc(volunteerRef);
+    } catch (error) {
+        console.error("Error deleting volunteer: ", error);
+        throw error;
+    }
 }
 
 
@@ -85,6 +109,7 @@ export async function addStoreItem(item: Omit<StoreItem, 'id'>): Promise<void> {
       await setDoc(itemRef, item);
     } catch (error) {
       console.error("Error adding store item: ", error);
+      throw error;
     }
 }
 
@@ -212,53 +237,48 @@ export async function getClockEventById(id: string): Promise<ClockEvent | null> 
 
 
 // Seeding Utility
+// This will only run if the collections are empty.
 export async function seedDatabase() {
-    console.log("Starting database seed...");
+    console.log("Checking if database needs seeding...");
     const batch = writeBatch(db);
+    let writes = 0;
 
     // Seed Volunteers
-    console.log("Seeding volunteers...");
     const volunteersCol = collection(db, 'volunteers');
     const existingVolunteers = await getDocs(query(volunteersCol));
     if (existingVolunteers.empty) {
+        console.log("Seeding volunteers...");
         mockVolunteers.forEach(v => {
-            // A real app would use a better way to generate UIDs.
-            // For this seed, we'll use a hash of the email.
             const pseudoId = v.email.replace(/[^a-zA-Z0-9]/g, '');
             const docRef = doc(db, 'volunteers', pseudoId);
-            batch.set(docRef, {
-                ...v,
-                id: pseudoId,
-            });
+            batch.set(docRef, v);
+            writes++;
         });
-        console.log(`${mockVolunteers.length} volunteers queued for seeding.`);
-    } else {
-        console.log("Volunteers collection is not empty, skipping seed.");
     }
 
-
     // Seed Store Items
-    console.log("Seeding store items...");
     const itemsCol = collection(db, 'storeItems');
     const existingItems = await getDocs(query(itemsCol));
-
     if (existingItems.empty) {
+        console.log("Seeding store items...");
         mockStoreItems.forEach(item => {
             const docRef = doc(db, 'storeItems', item.id);
             batch.set(docRef, item);
+            writes++;
         });
-        console.log(`${mockStoreItems.length} store items queued for seeding.`);
-    } else {
-         console.log("Store items collection is not empty, skipping seed.");
     }
 
-
-    try {
-        await batch.commit();
-        console.log("Database seeded successfully!");
-        return { success: true, message: "Database seeded successfully!" };
-    } catch (error) {
-        console.error("Error seeding database:", error);
-        return { success: false, message: `Error seeding database: ${error}` };
+    if (writes > 0) {
+        try {
+            await batch.commit();
+            console.log("Database seeded successfully!");
+            return { success: true, message: `Database seeded with ${writes} documents.` };
+        } catch (error) {
+            console.error("Error seeding database:", error);
+            return { success: false, message: `Error seeding database: ${error}` };
+        }
+    } else {
+        console.log("Database collections are not empty. Seeding skipped.");
+        return { success: true, message: "Database already contains data. Seeding skipped." };
     }
 }

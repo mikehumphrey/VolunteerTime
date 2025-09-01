@@ -1,5 +1,6 @@
+
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -10,12 +11,51 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileDown } from "lucide-react";
-import { volunteers, storeItems, transactions, Volunteer, StoreItem } from "@/lib/data";
+import { FileDown, Loader2 } from "lucide-react";
+import { Volunteer, StoreItem, Transaction } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getVolunteers, getStoreItems, getTransactions } from '@/lib/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TransactionsPage() {
-  const [transactionHistory] = useState(transactions);
+  const [transactionHistory, setTransactionHistory] = useState<Transaction[]>([]);
+  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
+  const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const [transactions, volunteerList, itemList] = await Promise.all([
+        getTransactions(),
+        getVolunteers(),
+        getStoreItems()
+      ]);
+      setTransactionHistory(transactions.sort((a, b) => b.date.getTime() - a.date.getTime()));
+      setVolunteers(volunteerList);
+      setStoreItems(itemList);
+      setLoading(false);
+    }
+
+    fetchData();
+  }, []);
+
+  const renderSkeleton = () => (
+     <TableRow>
+        <TableCell>
+           <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            </div>
+        </TableCell>
+        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+        <TableCell className="text-right"><Skeleton className="h-6 w-16 ml-auto" /></TableCell>
+    </TableRow>
+  );
 
   return (
     <div className="space-y-6">
@@ -46,14 +86,21 @@ export default function TransactionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactionHistory.length === 0 ? (
+              {loading ? (
+                <>
+                  {renderSkeleton()}
+                  {renderSkeleton()}
+                  {renderSkeleton()}
+                  {renderSkeleton()}
+                </>
+              ) : transactionHistory.length === 0 ? (
                  <TableRow>
                     <TableCell colSpan={4} className="h-24 text-center">
                       No transactions found.
                     </TableCell>
                   </TableRow>
               ) : (
-                transactionHistory.sort((a,b) => b.date.getTime() - a.date.getTime()).map((transaction) => {
+                transactionHistory.map((transaction) => {
                   const volunteer = volunteers.find(v => v.id === transaction.volunteerId);
                   const item = storeItems.find(i => i.id === transaction.itemId);
                   return (
@@ -65,13 +112,13 @@ export default function TransactionsPage() {
                             <AvatarFallback>{volunteer?.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="font-medium">{volunteer?.name}</div>
-                            <div className="text-sm text-muted-foreground">{volunteer?.email}</div>
+                            <div className="font-medium">{volunteer?.name || 'Unknown'}</div>
+                            <div className="text-sm text-muted-foreground">{volunteer?.email || ''}</div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                          <div className="font-medium">{item?.name}</div>
+                          <div className="font-medium">{item?.name || 'Unknown Item'}</div>
                       </TableCell>
                        <TableCell>
                           {new Date(transaction.date).toLocaleDateString()}

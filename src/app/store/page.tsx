@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,8 +25,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { volunteers, storeItems as initialStoreItems, transactions, Volunteer, StoreItem } from "@/lib/data";
-import { ShoppingCart, PlusCircle } from "lucide-react";
+import { Volunteer, StoreItem, Transaction } from "@/lib/data";
+import { ShoppingCart, PlusCircle, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -36,6 +35,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getVolunteers, getStoreItems, addStoreItem, getTransactions, addTransaction } from '@/lib/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const transactionFormSchema = z.object({
   volunteerId: z.string().min(1, "Please select a volunteer."),
@@ -53,9 +54,30 @@ type AddItemFormValues = z.infer<typeof addItemFormSchema>;
 
 export default function StorePage() {
   const { toast } = useToast();
-  const [volunteerList, setVolunteerList] = useState<Volunteer[]>(volunteers);
-  const [storeItems, setStoreItems] = useState<StoreItem[]>(initialStoreItems);
-  const [transactionHistory, setTransactionHistory] = useState(transactions);
+  const [volunteerList, setVolunteerList] = useState<Volunteer[]>([]);
+  const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
+  const [transactionHistory, setTransactionHistory] = useState<Transaction[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [isSubmittingTransaction, setIsSubmittingTransaction] = useState(false);
+  const [isSubmittingItem, setIsSubmittingItem] = useState(false);
+
+  const fetchData = async () => {
+    setLoadingData(true);
+    const [volunteers, items, transactions] = await Promise.all([
+      getVolunteers(),
+      getStoreItems(),
+      getTransactions(),
+    ]);
+    setVolunteerList(volunteers);
+    setStoreItems(items);
+    setTransactionHistory(transactions.sort((a, b) => b.date.getTime() - a.date.getTime()));
+    setLoadingData(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+  
 
   const transactionForm = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
@@ -74,7 +96,7 @@ export default function StorePage() {
   const selectedVolunteer = volunteerList.find(v => v.id.toString() === selectedVolunteerId);
   const selectedItem = storeItems.find(i => i.id === selectedItemId);
 
-  function onTransactionSubmit(data: TransactionFormValues) {
+  async function onTransactionSubmit(data: TransactionFormValues) {
     if (!selectedVolunteer || !selectedItem) {
       toast({
         title: "Error",
@@ -93,37 +115,35 @@ export default function StorePage() {
       return;
     }
 
-    // Update volunteer hours
-    const updatedVolunteers = volunteerList.map(v => 
-      v.id === selectedVolunteer.id ? { ...v, hours: v.hours - selectedItem.cost } : v
-    );
-    setVolunteerList(updatedVolunteers);
-    
-    // Add to transaction history
-    const newTransaction = {
-      id: new Date().toISOString(),
-      volunteerId: selectedVolunteer.id,
-      itemId: selectedItem.id,
-      hoursDeducted: selectedItem.cost,
-      date: new Date(),
-    };
-    setTransactionHistory([newTransaction, ...transactionHistory]);
-    
-    toast({
-      title: "Transaction Successful",
-      description: `Deducted ${selectedItem.cost} hours from ${selectedVolunteer.name} for a ${selectedItem.name}.`,
-    });
-    transactionForm.reset({volunteerId: '', itemId: ''});
+    setIsSubmittingTransaction(true);
+    try {
+      const newVolunteerHours = selectedVolunteer.hours - selectedItem.cost;
+      await addTransaction(selectedVolunteer.id, selectedItem.id, selectedItem.cost, newVolunteerHours);
+      toast({
+        title: "Transaction Successful",
+        description: `Deducted ${selectedItem.cost} hours from ${selectedVolunteer.name} for a ${selectedItem.name}.`,
+      });
+      await fetchData(); // Refresh all data
+      transactionForm.reset({volunteerId: '', itemId: ''});
+    } catch(error) {
+       toast({
+        title: "Transaction Failed",
+        description: "Could not complete the transaction. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingTransaction(false);
+    }
   }
 
-  function onAddItemSubmit(data: AddItemFormValues) {
-    const newItem: StoreItem = {
-      id: data.name.toLowerCase().replace(/\s+/g, '-'),
+  async function onAddItemSubmit(data: AddItemFormValues) {
+    const newItem: Omit<StoreItem, 'id'> = {
       name: data.name,
       cost: data.cost,
     };
-
-    if (storeItems.some(item => item.id === newItem.id)) {
+    
+    const existingId = data.name.toLowerCase().replace(/\s+/g, '-');
+    if (storeItems.some(item => item.id === existingId)) {
       toast({
         title: "Item Exists",
         description: "An item with this name already exists.",
@@ -132,12 +152,24 @@ export default function StorePage() {
       return;
     }
 
-    setStoreItems([...storeItems, newItem]);
-    toast({
-      title: "Item Added",
-      description: `${newItem.name} has been added to the store.`,
-    });
-    addItemForm.reset({ name: "", cost: 0 });
+    setIsSubmittingItem(true);
+    try {
+      await addStoreItem(newItem);
+      toast({
+        title: "Item Added",
+        description: `${newItem.name} has been added to the store.`,
+      });
+      await fetchData(); // Refresh store items
+      addItemForm.reset({ name: "", cost: 0 });
+    } catch (error) {
+      toast({
+        title: "Error Adding Item",
+        description: "Could not add the new item. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingItem(false);
+    }
   }
 
   return (
@@ -163,16 +195,16 @@ export default function StorePage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Volunteer</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value || ''}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value || ''} disabled={loadingData}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a volunteer" />
+                              <SelectValue placeholder={loadingData ? "Loading volunteers..." : "Select a volunteer"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {volunteerList.map(v => (
                               <SelectItem key={v.id} value={v.id.toString()}>
-                                {v.name} ({v.hours} hours)
+                                {v.name} ({Math.round(v.hours)} hours)
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -188,10 +220,10 @@ export default function StorePage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Item</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value || ''}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value || ''} disabled={loadingData}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select an item" />
+                              <SelectValue placeholder={loadingData ? "Loading items..." : "Select an item"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -214,14 +246,14 @@ export default function StorePage() {
                           This transaction will deduct <strong>{selectedItem.cost} hours</strong> from {selectedVolunteer.name}.
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Their new balance will be <strong>{selectedVolunteer.hours - selectedItem.cost} hours</strong>.
+                          Their new balance will be <strong>{Math.round(selectedVolunteer.hours - selectedItem.cost)} hours</strong>.
                         </p>
                       </CardContent>
                     </Card>
                   )}
 
-                  <Button type="submit" disabled={!selectedVolunteer || !selectedItem}>
-                    <ShoppingCart className="mr-2 h-4 w-4" />
+                  <Button type="submit" disabled={!selectedVolunteer || !selectedItem || isSubmittingTransaction}>
+                    {isSubmittingTransaction ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingCart className="mr-2 h-4 w-4" />}
                     Complete Transaction
                   </Button>
                 </form>
@@ -262,8 +294,8 @@ export default function StorePage() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit">
-                    <PlusCircle className="mr-2 h-4 w-4" />
+                  <Button type="submit" disabled={isSubmittingItem}>
+                    {isSubmittingItem ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
                     Add Item
                   </Button>
                 </form>
@@ -277,7 +309,13 @@ export default function StorePage() {
              <CardDescription>A log of the latest exchanges.</CardDescription>
            </CardHeader>
            <CardContent>
-            {transactionHistory.length === 0 ? (
+            {loadingData ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+            ) : transactionHistory.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">No transactions yet.</p>
             ) : (
              <Table>
@@ -288,14 +326,14 @@ export default function StorePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactionHistory.slice(0, 5).map((t) => {
+                  {transactionHistory.slice(0, 10).map((t) => {
                     const volunteer = volunteerList.find(v => v.id === t.volunteerId);
                     const item = storeItems.find(i => i.id === t.itemId);
                     return (
                       <TableRow key={t.id}>
                         <TableCell>
-                          <div className="font-medium">{volunteer?.name}</div>
-                          <div className="text-sm text-muted-foreground">{item?.name}</div>
+                          <div className="font-medium">{volunteer?.name || 'N/A'}</div>
+                          <div className="text-sm text-muted-foreground">{item?.name || 'N/A'}</div>
                         </TableCell>
                         <TableCell className="text-right font-mono text-destructive">-{t.hoursDeducted} hrs</TableCell>
                       </TableRow>

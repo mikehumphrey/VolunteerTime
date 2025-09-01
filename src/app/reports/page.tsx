@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -13,23 +13,59 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileDown, BrainCircuit, Loader2 } from "lucide-react";
-import { volunteers, Volunteer } from "@/lib/data";
+import { Volunteer } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateMotivation } from '@/ai/flows/generate-motivation-flow';
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from '@/hooks/use-auth';
+import { getVolunteers } from '@/lib/firestore';
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState('');
-  const { toast } = useToast();
-  const currentUser = volunteers.find(v => v.email === 'michaelhumph@gmail.com')!;
+  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+
+  useEffect(() => {
+    async function fetchVolunteers() {
+      setDataLoading(true);
+      const volunteerList = await getVolunteers();
+      setVolunteers(volunteerList);
+      setDataLoading(false);
+    }
+    fetchVolunteers();
+  }, []);
 
   const handleGenerateSummary = async () => {
     setLoading(true);
     setSummary('');
+
+    if (!user || volunteers.length === 0) {
+      toast({
+        title: "Error",
+        description: "User or volunteer data not available.",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+    
+    const currentUser = volunteers.find(v => v.id === user.uid);
+    if (!currentUser) {
+        toast({
+            title: "Error",
+            description: "Current user not found in volunteer list.",
+            variant: "destructive",
+        });
+        setLoading(false);
+        return;
+    }
 
     try {
       const volunteerDataForAI = volunteers.map((v: Volunteer) => ({
@@ -60,6 +96,21 @@ export default function ReportsPage() {
     }
   };
 
+  const renderSkeleton = () => (
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+        </div>
+      </TableCell>
+      <TableCell><Skeleton className="h-6 w-16 ml-auto" /></TableCell>
+    </TableRow>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -68,7 +119,7 @@ export default function ReportsPage() {
           <p className="text-muted-foreground">View and download reports of volunteer hours.</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleGenerateSummary} disabled={loading}>
+          <Button onClick={handleGenerateSummary} disabled={loading || dataLoading}>
             {loading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -120,23 +171,31 @@ export default function ReportsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {volunteers.sort((a,b) => b.hours - a.hours).map((volunteer) => (
-                <TableRow key={volunteer.id} className={volunteer.id === currentUser.id ? 'bg-muted/50' : ''}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={volunteer.avatar} alt={volunteer.name} data-ai-hint="person" />
-                        <AvatarFallback>{volunteer.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{volunteer.name} {volunteer.id === currentUser.id ? '(You)' : ''}</div>
-                        <div className="text-sm text-muted-foreground">{volunteer.email}</div>
+              {dataLoading ? (
+                <>
+                  {renderSkeleton()}
+                  {renderSkeleton()}
+                  {renderSkeleton()}
+                </>
+              ) : (
+                volunteers.sort((a,b) => b.hours - a.hours).map((volunteer) => (
+                  <TableRow key={volunteer.id} className={volunteer.id === user?.uid ? 'bg-muted/50' : ''}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={volunteer.avatar} alt={volunteer.name} data-ai-hint="person" />
+                          <AvatarFallback>{volunteer.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">{volunteer.name} {volunteer.id === user?.uid ? '(You)' : ''}</div>
+                          <div className="text-sm text-muted-foreground">{volunteer.email}</div>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-lg">{volunteer.hours} hrs</TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-lg">{Math.round(volunteer.hours)} hrs</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
