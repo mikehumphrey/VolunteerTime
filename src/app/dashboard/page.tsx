@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
@@ -50,7 +51,6 @@ export default function DashboardPage() {
         toast({
           title: "Clocked Out",
           description: `You have successfully clocked out. Your session duration was ${formatDuration(duration)}.`,
-          variant: "default"
         });
       }
       setElapsedTime(0);
@@ -62,7 +62,6 @@ export default function DashboardPage() {
       toast({
         title: "Clocked In",
         description: "You have successfully clocked in. Your time is now being tracked.",
-        variant: "default"
       });
     }
   };
@@ -110,9 +109,9 @@ export default function DashboardPage() {
 
           <Button 
             size="lg" 
-            className={`w-full h-16 text-xl rounded-full transition-all duration-300 transform hover:scale-105 ${isClockedIn ? 'bg-destructive hover:bg-destructive/90' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+            className={`w-full h-16 text-xl rounded-full transition-all duration-300 transform hover:scale-105`}
+            variant={isClockedIn ? 'destructive' : 'default'}
             onClick={handleToggleClock}
-            style={!isClockedIn ? { backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' } : {}}
           >
             {isClockedIn ? (
               <>
