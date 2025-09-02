@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -37,8 +37,9 @@ const db = getFirestore(app);
 // If we're in development, connect to the emulators
 if (process.env.NODE_ENV === 'development') {
     try {
-        console.log("Connecting to Firebase Emulators");
-        connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+        console.log("Connecting to Firebase Firestore Emulator");
+        // We are connecting only Firestore to the emulator.
+        // Auth will use the live service, allowing for real Google Sign-In.
         connectFirestoreEmulator(db, '127.0.0.1', 8080);
     } catch (error) {
         console.error("Error connecting to Firebase Emulators:", error);
