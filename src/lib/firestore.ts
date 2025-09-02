@@ -1,8 +1,9 @@
 
 'use server';
 
-import { db } from './firebase';
+import { db, storage } from './firebase';
 import { collection, doc, getDoc, setDoc, updateDoc, getDocs, writeBatch, query, Timestamp, deleteDoc, addDoc, where } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Volunteer, StoreItem, Transaction, volunteers as mockVolunteers, storeItems as mockStoreItems, ClockEvent, HourEntry } from './data';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -85,6 +86,18 @@ export async function deleteVolunteer(id: string): Promise<void> {
         await deleteDoc(volunteerRef);
     } catch (error) {
         console.error("Error deleting volunteer: ", error);
+        throw error;
+    }
+}
+
+export async function uploadAvatar(userId: string, file: File): Promise<string> {
+    try {
+        const storageRef = ref(storage, `avatars/${userId}/${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        return downloadURL;
+    } catch (error) {
+        console.error("Error uploading avatar: ", error);
         throw error;
     }
 }

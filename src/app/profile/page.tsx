@@ -22,8 +22,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { updateVolunteer } from "@/lib/firestore";
-import { useEffect } from "react";
+import { updateVolunteer, uploadAvatar } from "@/lib/firestore";
+import { useEffect, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50, "Name must not be longer than 50 characters."),
@@ -42,7 +43,10 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function ProfilePage() {
   const { toast } = useToast();
-  const { volunteer, loading } = useAuth();
+  const { volunteer, loading, refreshVolunteer } = useAuth();
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -96,6 +100,34 @@ export default function ProfilePage() {
     }
   }
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !volunteer) return;
+
+    setIsUploading(true);
+    try {
+      const avatarUrl = await uploadAvatar(volunteer.id, file);
+      await updateVolunteer(volunteer.id, { avatar: avatarUrl });
+      await refreshVolunteer(); // Refresh auth context to get new avatar URL
+      toast({
+        title: "Avatar Updated",
+        description: "Your new profile photo has been saved.",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload Failed",
+        description: "Could not upload your photo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   if (loading || !volunteer) {
     return (
        <div className="space-y-6">
@@ -144,11 +176,21 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
                 <div className="flex items-center gap-6 mb-8">
-                  <Avatar className="h-20 w-20">
+                  <Avatar className="h-20 w-20 cursor-pointer" onClick={handleAvatarClick}>
                     <AvatarImage src={volunteer.avatar} alt={volunteer.name} />
                     <AvatarFallback>{volunteer.name.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <Button variant="outline" type="button">Change Photo</Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="image/png, image/jpeg, image/gif"
+                  />
+                  <Button variant="outline" type="button" onClick={handleAvatarClick} disabled={isUploading}>
+                    {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isUploading ? "Uploading..." : "Change Photo"}
+                  </Button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
