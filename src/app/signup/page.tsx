@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
+import { useEffect } from "react";
 
 const signupFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -39,6 +40,12 @@ export default function SignupPage() {
     mode: "onChange",
   });
 
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
+
   async function onSubmit(data: SignupFormValues) {
     try {
       await signup(data.email, data.password, data.name);
@@ -57,8 +64,7 @@ export default function SignupPage() {
   }
 
   if (user) {
-    router.push('/dashboard');
-    return null;
+    return null; // or a loading spinner
   }
 
   return (
@@ -107,7 +113,7 @@ export default function SignupPage() {
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
+                  </Ite
                 )}
               />
               <Button type="submit" className="w-full">

@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
+import { useEffect } from "react";
 
 const loginFormSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
@@ -46,6 +47,12 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "" },
     mode: "onChange",
   });
+  
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   async function onSubmit(data: LoginFormValues) {
     try {
@@ -82,8 +89,7 @@ export default function LoginPage() {
   }
 
   if (user) {
-    router.push('/dashboard');
-    return null;
+    return null; // or a loading spinner
   }
 
   return (
