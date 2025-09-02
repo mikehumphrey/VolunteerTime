@@ -3,13 +3,11 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  experimental: {
-    // This is required to allow the Next.js dev server to accept requests from the
-    // Cloud Workstations proxy.
-    allowedDevOrigins: [
-      'https://*.cloudworkstations.dev',
-    ],
-  },
+  // This is required to allow the Next.js dev server to accept requests from the
+  // Cloud Workstations proxy.
+  allowedDevOrigins: [
+    'https://*.cloudworkstations.dev',
+  ],
   typescript: {
     ignoreBuildErrors: true,
   },
