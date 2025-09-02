@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { MoreHorizontal, UserPlus, Edit, Trash2, Phone, FileText, CheckCircle, XCircle, Shield, Loader2 } from "lucide-react";
+import { MoreHorizontal, UserPlus, Edit, Trash2, Phone, FileText, CheckCircle, XCircle, Shield, Loader2, PlusCircle } from "lucide-react";
 import { Volunteer, appSettings } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useForm } from "react-hook-form";
@@ -76,10 +76,17 @@ const volunteerFormSchema = z.object({
 
 type VolunteerFormValues = z.infer<typeof volunteerFormSchema>;
 
+const addHoursFormSchema = z.object({
+  hoursToAdd: z.coerce.number().positive("Hours must be a positive number."),
+});
+type AddHoursFormValues = z.infer<typeof addHoursFormSchema>;
+
+
 export default function VolunteersPage() {
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isAddHoursOpen, setIsAddHoursOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingVolunteer, setEditingVolunteer] = useState<Volunteer | null>(null);
   const { toast } = useToast();
@@ -99,6 +106,11 @@ export default function VolunteersPage() {
     resolver: zodResolver(volunteerFormSchema),
   });
 
+  const addHoursForm = useForm<AddHoursFormValues>({
+    resolver: zodResolver(addHoursFormSchema),
+  });
+
+
   const handleAddClick = () => {
     setEditingVolunteer(null);
     form.reset({ name: "", email: "", hours: 0, phone: "", twitter: "", facebook: "", instagram: "", formCompleted: false, formUrl: "", isAdmin: false });
@@ -109,6 +121,12 @@ export default function VolunteersPage() {
     setEditingVolunteer(volunteer);
     form.reset(volunteer);
     setIsFormOpen(true);
+  };
+  
+  const handleAddHoursClick = (volunteer: Volunteer) => {
+    setEditingVolunteer(volunteer);
+    addHoursForm.reset({ hoursToAdd: 0 });
+    setIsAddHoursOpen(true);
   };
 
   const handleDeleteClick = async (volunteerId: string) => {
@@ -160,6 +178,33 @@ export default function VolunteersPage() {
       setIsSubmitting(false);
     }
   };
+
+  const onAddHoursSubmit = async (data: AddHoursFormValues) => {
+    if (!editingVolunteer) return;
+    setIsSubmitting(true);
+    try {
+      // Round up to the nearest 15-minute increment (0.25 hours)
+      const roundedHours = Math.ceil(data.hoursToAdd * 4) / 4;
+      const newTotalHours = (editingVolunteer.hours || 0) + roundedHours;
+
+      await updateVolunteer(editingVolunteer.id, { hours: newTotalHours });
+      toast({
+        title: "Hours Added",
+        description: `${roundedHours} hours have been added to ${editingVolunteer.name}. New total: ${newTotalHours} hours.`,
+      });
+      setIsAddHoursOpen(false);
+      fetchVolunteers();
+    } catch (error) {
+       toast({
+        title: "Update Failed",
+        description: "An error occurred while adding hours.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
 
   const renderSkeleton = () => (
     <TableRow>
@@ -385,6 +430,48 @@ export default function VolunteersPage() {
             </Form>
           </DialogContent>
         </Dialog>
+        
+        {/* Add Hours Dialog */}
+        <Dialog open={isAddHoursOpen} onOpenChange={setIsAddHoursOpen}>
+          <DialogContent className="sm:max-w-md">
+             <DialogHeader>
+              <DialogTitle>Add Hours for {editingVolunteer?.name}</DialogTitle>
+              <DialogDescription>
+                Manually add volunteer hours. The value will be rounded up to the nearest 15-minute increment. Current hours: {Math.round(editingVolunteer?.hours || 0)}
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...addHoursForm}>
+              <form onSubmit={addHoursForm.handleSubmit(onAddHoursSubmit)} className="space-y-4">
+                 <FormField
+                  control={addHoursForm.control}
+                  name="hoursToAdd"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hours to Add</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="e.g., 2.5" {...field} step="0.25" />
+                      </FormControl>
+                      <FormDescription>
+                        Enter a number like 1, 2.5, or 3.75.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <DialogFooter>
+                  <DialogClose asChild>
+                     <Button type="button" variant="ghost">Cancel</Button>
+                  </DialogClose>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Add Hours
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
       </div>
 
       <Card>
@@ -473,6 +560,10 @@ export default function VolunteersPage() {
                         <DropdownMenuItem onClick={() => handleEditClick(volunteer)}>
                           <Edit className="mr-2 h-4 w-4" />
                           <span>Edit</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAddHoursClick(volunteer)}>
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          <span>Add Hours</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDeleteClick(volunteer.id)}
