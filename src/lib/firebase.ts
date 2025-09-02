@@ -37,13 +37,14 @@ const db = getFirestore(app);
 // If we're in development, connect to the emulators
 if (process.env.NODE_ENV === 'development') {
     try {
-        console.log("Connecting to Firebase Firestore Emulator");
-        // We are connecting only Firestore to the emulator.
-        // Auth will use the live service, allowing for real Google Sign-In.
+        console.log("Connecting to Firebase Firestore Emulator...");
         connectFirestoreEmulator(db, '127.0.0.1', 8080);
+        console.log("Firestore is now connected to the local emulator.");
     } catch (error) {
-        console.error("Error connecting to Firebase Emulators:", error);
+        console.error("Error connecting to Firebase Firestore Emulator:", error);
     }
+} else {
+    console.log("Running in production mode. Connecting to live Firebase services.");
 }
 
 
