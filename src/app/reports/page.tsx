@@ -96,6 +96,33 @@ export default function ReportsPage() {
     }
   };
 
+  const handleDownloadReport = () => {
+    if (volunteers.length === 0) {
+      toast({
+        title: "No Data",
+        description: "There is no data to download.",
+      });
+      return;
+    }
+
+    const headers = ['Name', 'Email', 'Total Hours'];
+    const csvContent = [
+      headers.join(','),
+      ...volunteers.map(v => `"${v.name}","${v.email}",${Math.round(v.hours)}`)
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'volunteer_hours_report.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const renderSkeleton = () => (
     <TableRow>
       <TableCell>
@@ -127,7 +154,7 @@ export default function ReportsPage() {
             )}
             Generate AI Motivation
           </Button>
-          <Button>
+          <Button onClick={handleDownloadReport} disabled={dataLoading}>
             <FileDown className="mr-2 h-4 w-4" />
             Download Report
           </Button>

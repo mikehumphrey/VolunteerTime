@@ -16,12 +16,14 @@ import { Volunteer, StoreItem, Transaction } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getVolunteers, getStoreItems, getTransactions } from '@/lib/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export default function TransactionsPage() {
   const [transactionHistory, setTransactionHistory] = useState<Transaction[]>([]);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchData() {
@@ -39,6 +41,44 @@ export default function TransactionsPage() {
 
     fetchData();
   }, []);
+
+  const handleDownloadReport = () => {
+    if (transactionHistory.length === 0) {
+      toast({
+        title: "No Data",
+        description: "There are no transactions to download.",
+      });
+      return;
+    }
+
+    const headers = ['Transaction ID', 'Date', 'Volunteer Name', 'Volunteer Email', 'Item Name', 'Hours Deducted'];
+    const csvContent = [
+      headers.join(','),
+      ...transactionHistory.map(t => {
+        const volunteer = volunteers.find(v => v.id === t.volunteerId);
+        const item = storeItems.find(i => i.id === t.itemId);
+        return [
+          t.id,
+          t.date.toISOString().split('T')[0],
+          `"${volunteer?.name || 'N/A'}"`,
+          volunteer?.email || 'N/A',
+          `"${item?.name || 'N/A'}"`,
+          t.hoursDeducted
+        ].join(',');
+      })
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'transaction_report.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const renderSkeleton = () => (
      <TableRow>
@@ -64,7 +104,7 @@ export default function TransactionsPage() {
           <h1 className="text-2xl font-bold font-headline">Transaction History</h1>
           <p className="text-muted-foreground">A complete log of all store transactions.</p>
         </div>
-        <Button>
+        <Button onClick={handleDownloadReport} disabled={loading}>
           <FileDown className="mr-2 h-4 w-4" />
           Download Report
         </Button>
