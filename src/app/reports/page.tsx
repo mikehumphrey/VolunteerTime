@@ -13,14 +13,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileDown, BrainCircuit, Loader2 } from "lucide-react";
-import { Volunteer } from "@/lib/data";
+import { Volunteer, HourEntry } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateMotivation } from '@/ai/flows/generate-motivation-flow';
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from '@/hooks/use-auth';
-import { getVolunteers } from '@/lib/firestore';
+import { getVolunteers, getHourEntriesForVolunteer } from '@/lib/firestore';
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(false);
@@ -73,9 +73,12 @@ export default function ReportsPage() {
         hours: v.hours,
       }));
       
+      const hourEntries = await getHourEntriesForVolunteer(currentUser.id);
+      
       const result = await generateMotivation({
         volunteerData: JSON.stringify(volunteerDataForAI),
         currentVolunteerName: currentUser.name,
+        hourEntries: JSON.stringify(hourEntries.map(e => ({date: e.date, hours: e.hours}))),
       });
 
       if (result.summary) {

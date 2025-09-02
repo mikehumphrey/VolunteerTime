@@ -2,8 +2,8 @@
 'use server';
 
 import { db } from './firebase';
-import { collection, doc, getDoc, setDoc, updateDoc, getDocs, writeBatch, query, Timestamp, deleteDoc, addDoc } from 'firebase/firestore';
-import { Volunteer, StoreItem, Transaction, volunteers as mockVolunteers, storeItems as mockStoreItems, ClockEvent } from './data';
+import { collection, doc, getDoc, setDoc, updateDoc, getDocs, writeBatch, query, Timestamp, deleteDoc, addDoc, where } from 'firebase/firestore';
+import { Volunteer, StoreItem, Transaction, volunteers as mockVolunteers, storeItems as mockStoreItems, ClockEvent, HourEntry } from './data';
 import { v4 as uuidv4 } from 'uuid';
 
 // Volunteer Management
@@ -196,14 +196,24 @@ export async function clockOut(volunteerId: string, eventId: string, currentHour
     const hoursAccumulated = durationMs / (1000 * 60 * 60);
     const newTotalHours = currentHours + hoursAccumulated;
 
-    // Update the clock event
+    // 1. Update the clock event
     batch.update(eventRef, {
         endTime: endTime,
         status: 'completed',
         hoursAccumulated: hoursAccumulated
     });
+    
+    // 2. Create a new hour entry
+    const newHourEntryRef = doc(collection(db, 'hourEntries'));
+    batch.set(newHourEntryRef, {
+        volunteerId,
+        date: new Date(),
+        hours: hoursAccumulated,
+        source: 'clock-in'
+    });
 
-    // Update the volunteer's record
+
+    // 3. Update the volunteer's record
     const volunteerRef = doc(db, 'volunteers', volunteerId);
     batch.update(volunteerRef, {
         currentClockEventId: null,
@@ -233,6 +243,52 @@ export async function getClockEventById(id: string): Promise<ClockEvent | null> 
     console.error("Error fetching clock event by ID: ", error);
     return null;
   }
+}
+
+// Hour Entry Management
+export async function addHours(volunteerId: string, hoursToAdd: number, date: Date): Promise<void> {
+    const batch = writeBatch(db);
+    const volunteerRef = doc(db, 'volunteers', volunteerId);
+    
+    // 1. Create a new hour entry
+    const newHourEntryRef = doc(collection(db, 'hourEntries'));
+    batch.set(newHourEntryRef, {
+        volunteerId,
+        date,
+        hours: hoursToAdd,
+        source: 'manual'
+    });
+
+    // 2. Update the volunteer's total hours
+    const volunteerSnap = await getDoc(volunteerRef);
+    if (!volunteerSnap.exists()) {
+        throw new Error("Volunteer not found!");
+    }
+    const currentHours = volunteerSnap.data().hours || 0;
+    const newTotalHours = currentHours + hoursToAdd;
+    batch.update(volunteerRef, { hours: newTotalHours });
+
+    await batch.commit();
+}
+
+export async function getHourEntriesForVolunteer(volunteerId: string): Promise<HourEntry[]> {
+    try {
+        const entriesCol = collection(db, 'hourEntries');
+        const q = query(entriesCol, where("volunteerId", "==", volunteerId));
+        const entrySnapshot = await getDocs(q);
+        const entryList = entrySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                date: (data.date as unknown as Timestamp).toDate(),
+            } as HourEntry;
+        });
+        return entryList;
+    } catch (error) {
+        console.error("Error fetching hour entries: ", error);
+        return [];
+    }
 }
 
 

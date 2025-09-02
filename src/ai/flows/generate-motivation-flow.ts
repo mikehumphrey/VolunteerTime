@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -14,6 +15,7 @@ import {z} from 'genkit';
 const GenerateMotivationInputSchema = z.object({
   volunteerData: z.string().describe('JSON string of an array of all volunteer data objects, each containing volunteer name and total hours volunteered.  For example: `[{name: "Alice", hours: 20}, {name: "Bob", hours: 30}]`.'),
   currentVolunteerName: z.string().describe("The name of the volunteer for whom to generate the motivational message."),
+  hourEntries: z.string().describe('JSON string of an array of recent hour entries for the current volunteer. Each entry is an object with a date and hours. For example: `[{"date":"2023-10-26T10:00:00.000Z","hours":4},{"date":"2023-10-24T14:30:00.000Z","hours":2.5}]`')
 });
 export type GenerateMotivationInput = z.infer<
   typeof GenerateMotivationInputSchema
@@ -42,12 +44,15 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateMotivationOutputSchema},
   prompt: `You are a motivational coach for volunteers. Your task is to generate a short, uplifting, and encouraging summary for a specific volunteer based on the data provided.
 
-The data for all volunteers this month is:
+The data for all volunteers is:
 {{{volunteerData}}}
 
 The volunteer you are writing the message for is named: {{{currentVolunteerName}}}.
 
-Please analyze their hours compared to the average of all volunteers. Provide a positive and personal message that will motivate them to continue volunteering. Keep it concise (2-3 sentences).
+Here are their recent hour entries:
+{{{hourEntries}}}
+
+Please analyze their recent contributions and total hours compared to the average of all volunteers. If they have volunteered recently, acknowledge that specific contribution. Provide a positive and personal message that will motivate them to continue volunteering. Keep it concise (2-3 sentences).
   `,
 });
 

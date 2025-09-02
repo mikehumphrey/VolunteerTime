@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { MoreHorizontal, UserPlus, Edit, Trash2, Phone, FileText, CheckCircle, XCircle, Shield, Loader2, PlusCircle } from "lucide-react";
+import { MoreHorizontal, UserPlus, Edit, Trash2, Phone, FileText, CheckCircle, XCircle, Shield, Loader2, PlusCircle, Calendar as CalendarIcon } from "lucide-react";
 import { Volunteer, appSettings } from "@/lib/data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useForm } from "react-hook-form";
@@ -53,8 +53,12 @@ import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { getVolunteers, updateVolunteer, createVolunteer, deleteVolunteer } from '@/lib/firestore';
+import { getVolunteers, updateVolunteer, createVolunteer, deleteVolunteer, addHours } from '@/lib/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 const volunteerFormSchema = z.object({
   id: z.string().optional(),
@@ -78,6 +82,9 @@ type VolunteerFormValues = z.infer<typeof volunteerFormSchema>;
 
 const addHoursFormSchema = z.object({
   hoursToAdd: z.coerce.number().positive("Hours must be a positive number."),
+  date: z.date({
+    required_error: "A date for the entry is required.",
+  }),
 });
 type AddHoursFormValues = z.infer<typeof addHoursFormSchema>;
 
@@ -108,6 +115,9 @@ export default function VolunteersPage() {
 
   const addHoursForm = useForm<AddHoursFormValues>({
     resolver: zodResolver(addHoursFormSchema),
+    defaultValues: {
+      date: new Date(),
+    }
   });
 
 
@@ -125,7 +135,7 @@ export default function VolunteersPage() {
   
   const handleAddHoursClick = (volunteer: Volunteer) => {
     setEditingVolunteer(volunteer);
-    addHoursForm.reset({ hoursToAdd: 0 });
+    addHoursForm.reset({ hoursToAdd: 0, date: new Date() });
     setIsAddHoursOpen(true);
   };
 
@@ -183,14 +193,13 @@ export default function VolunteersPage() {
     if (!editingVolunteer) return;
     setIsSubmitting(true);
     try {
-      // Round up to the nearest 15-minute increment (0.25 hours)
       const roundedHours = Math.ceil(data.hoursToAdd * 4) / 4;
-      const newTotalHours = (editingVolunteer.hours || 0) + roundedHours;
+      
+      await addHours(editingVolunteer.id, roundedHours, data.date);
 
-      await updateVolunteer(editingVolunteer.id, { hours: newTotalHours });
       toast({
         title: "Hours Added",
-        description: `${roundedHours} hours have been added to ${editingVolunteer.name}. New total: ${newTotalHours} hours.`,
+        description: `${roundedHours} hours for ${format(data.date, "PPP")} have been added to ${editingVolunteer.name}.`,
       });
       setIsAddHoursOpen(false);
       fetchVolunteers();
@@ -437,7 +446,7 @@ export default function VolunteersPage() {
              <DialogHeader>
               <DialogTitle>Add Hours for {editingVolunteer?.name}</DialogTitle>
               <DialogDescription>
-                Manually add volunteer hours. The value will be rounded up to the nearest 15-minute increment. Current hours: {Math.round(editingVolunteer?.hours || 0)}
+                Manually add volunteer hours. Current total: {Math.round(editingVolunteer?.hours || 0)} hours.
               </DialogDescription>
             </DialogHeader>
             <Form {...addHoursForm}>
@@ -452,8 +461,49 @@ export default function VolunteersPage() {
                         <Input type="number" placeholder="e.g., 2.5" {...field} step="0.25" />
                       </FormControl>
                       <FormDescription>
-                        Enter a number like 1, 2.5, or 3.75.
+                        Value will be rounded up to the nearest 15-min increment.
                       </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={addHoursForm.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Date of Hours</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-[240px] pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}

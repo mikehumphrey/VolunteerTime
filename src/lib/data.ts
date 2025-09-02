@@ -28,6 +28,14 @@ export type ClockEvent = {
     hoursAccumulated?: number;
 };
 
+export type HourEntry = {
+    id: string;
+    volunteerId: string;
+    date: Date;
+    hours: number;
+    source: 'clock-in' | 'manual';
+};
+
 
 // This mock data is now only used for seeding the database.
 export const volunteers: Omit<Volunteer, 'id'>[] = [
