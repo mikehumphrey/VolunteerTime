@@ -2,6 +2,5 @@
   "firebase_hosting": {
     "deploymentHostingUrl": "https://volunteertime.web.app"
   },
-  "gemini_api": {},
-  "secrets_manager": {}
+  "gemini_api": {}
 }
