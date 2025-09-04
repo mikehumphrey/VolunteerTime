@@ -36,8 +36,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// If we're in development, connect to the emulators
-if (process.env.NODE_ENV === 'development') {
+// If we're running locally with the emulator flag, connect to the emulators
+if (process.env.USE_FIREBASE_EMULATORS === 'true') {
     try {
         console.log("Connecting to Firebase Firestore Emulator...");
         connectFirestoreEmulator(db, '127.0.0.1', 8080);
@@ -46,7 +46,7 @@ if (process.env.NODE_ENV === 'development') {
         console.error("Error connecting to Firebase Firestore Emulator:", error);
     }
 } else {
-    console.log("Running in production mode. Connecting to live Firebase services.");
+    console.log("Running in production or non-emulator mode. Connecting to live Firebase services.");
 }
 
 
