@@ -47,19 +47,27 @@ export async function createVolunteer(volunteer: Partial<Volunteer>): Promise<vo
     try {
         const id = volunteer.id || uuidv4();
         const volunteerRef = doc(db, 'volunteers', id);
-        await setDoc(volunteerRef, {
-            name: volunteer.name,
+        
+        const newVolunteerData = {
+            name: volunteer.name || "New Volunteer",
             email: volunteer.email,
             avatar: volunteer.avatar || `https://i.pravatar.cc/150?u=${id}`,
             hours: volunteer.hours || 0,
+            phone: volunteer.phone || '',
+            twitter: volunteer.twitter || '',
+            facebook: volunteer.facebook || '',
+            instagram: volunteer.instagram || '',
+            formCompleted: volunteer.formCompleted || false,
+            formUrl: volunteer.formUrl || '',
             isAdmin: volunteer.isAdmin || false,
-            privacySettings: volunteer.privacySettings || { showPhone: true, showSocial: true },
-            phone: volunteer.phone || "",
-            twitter: volunteer.twitter || "",
-            facebook: volunteer.facebook || "",
-            instagram: volunteer.instagram || "",
-            currentClockEventId: null,
-        });
+            privacySettings: volunteer.privacySettings || {
+                showPhone: true,
+                showSocial: true,
+            },
+            currentClockEventId: volunteer.currentClockEventId || null,
+        };
+
+        await setDoc(volunteerRef, newVolunteerData);
     } catch (error) {
         console.error("Error creating volunteer: ", error);
         throw error;
