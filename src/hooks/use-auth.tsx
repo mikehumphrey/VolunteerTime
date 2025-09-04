@@ -21,7 +21,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Volunteer } from '@/lib/data';
-import { getVolunteerById, createVolunteer as createVolunteerInDb } from '@/lib/firestore';
+import { getVolunteerById, createVolunteer } from '@/lib/firestore';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 email: user.email!,
                 avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
             };
-            await createVolunteerInDb(newVolunteerData);
+            await createVolunteer(newVolunteerData);
             setVolunteer(await getVolunteerById(user.uid));
         }
 
@@ -101,13 +101,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email: user.email!,
             avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
         };
-        await createVolunteerInDb(newVolunteerData);
-        setVolunteer(await getVolunteerById(user.uid));
-    } else {
-        setVolunteer(existingVolunteer);
+        await createVolunteer(newVolunteerData);
     }
     
-    setUser(user);
+    // The onAuthStateChanged listener will handle setting user and volunteer state
+    // so we don't need to duplicate it here.
+
     return userCredential;
   };
 
@@ -122,10 +121,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         avatar: `https://i.pravatar.cc/150?u=${userCredential.user.uid}`,
     };
 
-    await createVolunteerInDb(newVolunteerData);
-    setUser(userCredential.user);
-    setVolunteer(await getVolunteerById(userCredential.user.uid));
-
+    await createVolunteer(newVolunteerData);
+    // The onAuthStateChanged listener will handle setting user and volunteer state
+    
     return userCredential;
   };
 
