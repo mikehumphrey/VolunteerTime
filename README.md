@@ -135,15 +135,12 @@ service cloud.firestore {
       allow write: if request.auth != null; // Only authenticated users can write
     }
 
-    // Volunteers can read their own data and public-facing profiles
+    // A user can read/update their own profile.
+    // An admin can read/write any profile.
+    // A new user can create their own profile.
     match /volunteers/{userId} {
-      allow read: if request.auth != null && (request.auth.uid == userId || resource.data.privacySettings.showProfile == true);
-      allow update: if request.auth != null && request.auth.uid == userId;
-      allow create, delete: if request.auth != null && get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.isAdmin == true; // Only admins can create/delete
-    }
-
-    // Admins can read all volunteer data
-    match /volunteers/{userId} {
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
       allow read, write: if request.auth != null && get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.isAdmin == true;
     }
 
