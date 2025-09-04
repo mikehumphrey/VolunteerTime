@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 id: user.uid,
                 name: user.displayName || 'New User',
                 email: user.email!,
-                avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
+                avatar: user.photoURL || `https://picsum.photos/seed/${user.uid}/150/150`,
             };
             await createVolunteer(newVolunteerData);
             setVolunteer(await getVolunteerById(user.uid));
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             id: user.uid,
             name: user.displayName || 'New Volunteer',
             email: user.email!,
-            avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
+            avatar: user.photoURL || `https://picsum.photos/seed/${user.uid}/150/150`,
         };
         await createVolunteer(newVolunteerData);
     }
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: userCredential.user.uid,
         name: name,
         email: email,
-        avatar: `https://i.pravatar.cc/150?u=${userCredential.user.uid}`,
+        avatar: `https://picsum.photos/seed/${userCredential.user.uid}/150/150`,
     };
 
     await createVolunteer(newVolunteerData);

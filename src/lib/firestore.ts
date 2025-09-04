@@ -51,7 +51,7 @@ export async function createVolunteer(volunteer: Partial<Volunteer>): Promise<vo
         const newVolunteerData = {
             name: volunteer.name || "New Volunteer",
             email: volunteer.email,
-            avatar: volunteer.avatar || `https://i.pravatar.cc/150?u=${id}`,
+            avatar: volunteer.avatar || `https://picsum.photos/seed/${id}/150/150`,
             hours: volunteer.hours || 0,
             phone: volunteer.phone || '',
             twitter: volunteer.twitter || '',
