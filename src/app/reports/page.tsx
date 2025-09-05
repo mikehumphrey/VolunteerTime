@@ -29,7 +29,7 @@ export default function ReportsPage() {
   const [dataLoading, setDataLoading] = useState(true);
 
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { volunteer } = useAuth();
 
 
   useEffect(() => {
@@ -39,14 +39,16 @@ export default function ReportsPage() {
       setVolunteers(volunteerList);
       setDataLoading(false);
     }
-    fetchVolunteers();
-  }, []);
+    if (volunteer) {
+        fetchVolunteers();
+    }
+  }, [volunteer]);
 
   const handleGenerateSummary = async () => {
     setLoading(true);
     setSummary('');
 
-    if (!user || volunteers.length === 0) {
+    if (!volunteer || volunteers.length === 0) {
       toast({
         title: "Error",
         description: "User or volunteer data not available.",
@@ -55,17 +57,6 @@ export default function ReportsPage() {
       setLoading(false);
       return;
     }
-    
-    const currentUser = volunteers.find(v => v.id === user.uid);
-    if (!currentUser) {
-        toast({
-            title: "Error",
-            description: "Current user not found in volunteer list.",
-            variant: "destructive",
-        });
-        setLoading(false);
-        return;
-    }
 
     try {
       const volunteerDataForAI = volunteers.map((v: Volunteer) => ({
@@ -73,11 +64,11 @@ export default function ReportsPage() {
         hours: v.hours,
       }));
       
-      const hourEntries = await getHourEntriesForVolunteer(currentUser.id);
+      const hourEntries = await getHourEntriesForVolunteer(volunteer.id);
       
       const result = await generateMotivation({
         volunteerData: JSON.stringify(volunteerDataForAI),
-        currentVolunteerName: currentUser.name,
+        currentVolunteerName: volunteer.name,
         hourEntries: JSON.stringify(hourEntries.map(e => ({date: e.date, hours: e.hours}))),
       });
 
@@ -208,21 +199,21 @@ export default function ReportsPage() {
                   {renderSkeleton()}
                 </>
               ) : (
-                volunteers.sort((a,b) => b.hours - a.hours).map((volunteer) => (
-                  <TableRow key={volunteer.id} className={volunteer.id === user?.uid ? 'bg-muted/50' : ''}>
+                volunteers.sort((a,b) => b.hours - a.hours).map((v) => (
+                  <TableRow key={v.id} className={v.id === volunteer?.id ? 'bg-muted/50' : ''}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarImage src={volunteer.avatar} alt={volunteer.name} data-ai-hint="person" />
-                          <AvatarFallback>{volunteer.name.charAt(0)}</AvatarFallback>
+                          <AvatarImage src={v.avatar} alt={v.name} data-ai-hint="person" />
+                          <AvatarFallback>{v.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium">{volunteer.name} {volunteer.id === user?.uid ? '(You)' : ''}</div>
-                          <div className="text-sm text-muted-foreground">{volunteer.email}</div>
+                          <div className="font-medium">{v.name} {v.id === volunteer?.id ? '(You)' : ''}</div>
+                          <div className="text-sm text-muted-foreground">{v.email}</div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right font-mono text-lg">{Math.round(volunteer.hours)} hrs</TableCell>
+                    <TableCell className="text-right font-mono text-lg">{Math.round(v.hours)} hrs</TableCell>
                   </TableRow>
                 ))
               )}
