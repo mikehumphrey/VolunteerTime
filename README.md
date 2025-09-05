@@ -132,24 +132,40 @@ service cloud.firestore {
     // Allow public read for store items
     match /storeItems/{itemId} {
       allow read: if true;
-      allow write: if request.auth != null; // Only authenticated users can write
+      allow write: if request.auth != null && get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.isAdmin == true; // Only admins can write
     }
 
-    // A user can read/update their own profile.
-    // An admin can read/write any profile.
-    // A new user can create their own profile.
+    // Any authenticated user can read the list of volunteers.
+    // A user can update their own profile.
+    // An admin can write to any profile.
+    // Any authenticated user can create their own profile.
     match /volunteers/{userId} {
-      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId;
-      allow read, write: if request.auth != null && get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.isAdmin == true;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.isAdmin == true;
     }
 
-    // Transactions can only be created by authenticated users
-    // and can be read by the involved volunteer or an admin
+    // Transactions can only be created by authenticated users who are admins.
+    // Transactions can be read by the involved volunteer or an admin.
     match /transactions/{transactionId} {
         allow read: if request.auth != null && (request.auth.uid == resource.data.volunteerId || get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.isAdmin == true);
-        allow create: if request.auth != null;
+        allow create: if request.auth != null && get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.isAdmin == true;
         allow update, delete: if false; // Transactions are immutable
+    }
+
+    // Clock-in events can be created by authenticated users.
+    // They can be read or updated only by the user who created them or an admin.
+    match /clockEvents/{eventId} {
+        allow read, update: if request.auth != null && (request.auth.uid == resource.data.volunteerId || get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.isAdmin == true);
+        allow create: if request.auth != null;
+    }
+
+    // Hour entries can be created by authenticated users.
+    // They can be read only by the user they belong to or an admin.
+    match /hourEntries/{entryId} {
+        allow read: if request.auth != null && (request.auth.uid == resource.data.volunteerId || get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.isAdmin == true);
+        allow create: if request.auth != null;
     }
 
     match /settings/{docId} {
