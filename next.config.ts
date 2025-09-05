@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   // This is required to allow the Next.js dev server to accept requests from the
   // Cloud Workstations proxy.
   allowedDevOrigins: [
-    'https://*.cloudworkstations.dev', 'localhost:3000', 'localhost:9003', 'localhost:9002','192.168.2.58', "https://9000-firebase-studio-1756568209616.cluster-76blnmxvvzdpat4inoxk5tmzik.cloudworkstations.dev"
+    'https://*.cloudworkstations.dev', 'localhost:3000', 'localhost:9003', 'localhost:9002','192.168.2.58','local-origin.dev', '*.local-origin.dev', 'https://9000-firebase-studio-1756568209616.cluster-76blnmxvvzdpat4inoxk5tmzik.cloudworkstations.dev'
   ],
   typescript: {
     ignoreBuildErrors: true,
