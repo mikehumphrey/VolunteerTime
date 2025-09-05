@@ -136,9 +136,8 @@ service cloud.firestore {
     }
 
     // Any authenticated user can read the list of volunteers.
-    // A user can update their own profile.
+    // A user can create their own profile, or update their own profile.
     // An admin can write to any profile.
-    // Any authenticated user can create their own profile.
     match /volunteers/{userId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId;
@@ -147,9 +146,9 @@ service cloud.firestore {
     }
 
     // Transactions can only be created by authenticated users who are admins.
-    // Transactions can be read by the involved volunteer or an admin.
+    // Transactions can be read by any authenticated user.
     match /transactions/{transactionId} {
-        allow read: if request.auth != null && (request.auth.uid == resource.data.volunteerId || get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.isAdmin == true);
+        allow read: if request.auth != null;
         allow create: if request.auth != null && get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.isAdmin == true;
         allow update, delete: if false; // Transactions are immutable
     }
