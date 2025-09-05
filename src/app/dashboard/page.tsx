@@ -66,10 +66,13 @@ export default function DashboardPage() {
   }, [volunteer]);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && volunteer) {
       checkActiveSession();
+    } else if (!authLoading && !volunteer) {
+        // If auth is done but there's no volunteer, stop loading.
+        setIsLoading(false);
     }
-  }, [authLoading, checkActiveSession]);
+  }, [authLoading, volunteer, checkActiveSession]);
 
 
   const handleToggleClock = async () => {
@@ -178,7 +181,7 @@ export default function DashboardPage() {
             className="w-full h-16 text-xl rounded-full transition-all duration-300 transform hover:scale-105"
             variant={isClockedIn ? 'destructive' : 'default'}
             onClick={handleToggleClock}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !volunteer}
           >
             {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : (
               isClockedIn ? (

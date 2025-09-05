@@ -42,38 +42,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [volunteer, setVolunteer] = useState<Volunteer | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  
+  const fetchVolunteerData = useCallback(async (user: User) => {
+    if (!user) return;
+    try {
+      let volunteerData = await getVolunteerById(user.uid);
+      if (volunteerData) {
+        setVolunteer(volunteerData);
+      } else {
+        console.warn("No volunteer data found for UID:", user.uid, "Creating a new record as a fallback.");
+        const newVolunteerData: Partial<Volunteer> = {
+            id: user.uid,
+            name: user.displayName || 'New User',
+            email: user.email!,
+            avatar: user.photoURL || `https://picsum.photos/seed/${user.uid}/150/150`,
+        };
+        await createVolunteer(newVolunteerData);
+        volunteerData = await getVolunteerById(user.uid);
+        setVolunteer(volunteerData);
+      }
+    } catch(error) {
+        console.error("Error fetching volunteer data:", error);
+        setVolunteer(null);
+    }
+  }, []);
 
   const refreshVolunteer = useCallback(async () => {
     if (user) {
-      setLoading(true);
-      const volunteerData = await getVolunteerById(user.uid);
-      if (volunteerData) {
-        setVolunteer(volunteerData);
-      }
-      setLoading(false);
+      await fetchVolunteerData(user);
     }
-  }, [user]);
+  }, [user, fetchVolunteerData]);
 
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setLoading(true);
       if (user) {
         setUser(user);
-        const volunteerData = await getVolunteerById(user.uid);
-        if (volunteerData) {
-          setVolunteer(volunteerData);
-        } else {
-            console.warn("No volunteer data found for UID:", user.uid, "Creating a new record as a fallback.");
-            const newVolunteerData: Partial<Volunteer> = {
-                id: user.uid,
-                name: user.displayName || 'New User',
-                email: user.email!,
-                avatar: user.photoURL || `https://picsum.photos/seed/${user.uid}/150/150`,
-            };
-            await createVolunteer(newVolunteerData);
-            setVolunteer(await getVolunteerById(user.uid));
-        }
-
+        await fetchVolunteerData(user);
       } else {
         setUser(null);
         setVolunteer(null);
@@ -82,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [fetchVolunteerData]);
 
   const login = (email: string, pass: string) => {
     return signInWithEmailAndPassword(auth, email, pass);
@@ -91,22 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const googleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
-    const user = userCredential.user;
-
-    const existingVolunteer = await getVolunteerById(user.uid);
-    if (!existingVolunteer) {
-        const newVolunteerData: Partial<Volunteer> = {
-            id: user.uid,
-            name: user.displayName || 'New Volunteer',
-            email: user.email!,
-            avatar: user.photoURL || `https://picsum.photos/seed/${user.uid}/150/150`,
-        };
-        await createVolunteer(newVolunteerData);
-    }
-    
-    // The onAuthStateChanged listener will handle setting user and volunteer state
-    // so we don't need to duplicate it here.
-
+    // onAuthStateChanged will handle the rest
     return userCredential;
   };
 
@@ -114,16 +105,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(userCredential.user, { displayName: name });
     
+    // Create the volunteer document immediately
     const newVolunteerData: Partial<Volunteer> = {
         id: userCredential.user.uid,
         name: name,
         email: email,
         avatar: `https://picsum.photos/seed/${userCredential.user.uid}/150/150`,
     };
-
     await createVolunteer(newVolunteerData);
-    // The onAuthStateChanged listener will handle setting user and volunteer state
-    
+
+    // onAuthStateChanged will handle setting state
     return userCredential;
   };
 
